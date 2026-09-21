@@ -1,0 +1,34 @@
+= Product Capability Audit: Promoting
+:revdate: 2026-09-20
+
+== Boundary verdict
+
+Promoting now has an executable commercial-incentive core. Pricing remains authoritative for base/contextual price selection; Carting and Ordering own their aggregates; Shipping executes shipment. Campaign remains inside Promoting rather than becoming a separate component.
+
+== Capability matrix
+
+[cols="3,1,4",options="header"]
+|===
+|Capability |Status |Audit
+|Promotion lifecycle |IMPLEMENTED |Immutable promotion definition with explicit active/inactive lifecycle.
+|Conditions/eligibility rules |IMPLEMENTED |Ordered deterministic minimum-subtotal and currency conditions with reason codes.
+|Actions/application methods |IMPLEMENTED |Fixed and basis-point percentage monetary actions plus typed non-price benefit evaluation.
+|Coupon issuance/validation |PARTIAL |Coupon lifecycle and deterministic validation are implemented; issuance orchestration/persistence is not yet owned here.
+|Usage/per-customer limits |IMPLEMENTED |Global and per-customer coupon limits are enforced against the supplied redemption ledger.
+|Date windows |IMPLEMENTED |Promotion and campaign windows are explicit and deterministic; promotion evaluation requires caller-supplied time when a window exists.
+|Priority/stacking/exclusivity |IMPLEMENTED |Priority-descending/id-ascending resolution with explicit stackable/exclusive policy.
+|Campaign grouping |IMPLEMENTED |Campaigns group promotion identifiers and support activate/pause/resume lifecycle.
+|Campaign budgets |IMPLEMENTED |Cumulative spend is bounded and budget exhaustion is evaluated deterministically.
+|Buy-X-Get-Y/free gift |IMPLEMENTED |Typed entitlement facts preserve qualifying/reward SKU and quantity semantics.
+|Free shipping incentive |IMPLEMENTED |Promoting emits free-shipping eligibility only; Shipping retains shipment execution ownership.
+|Redemption ledger/reversal |PARTIAL |Immutable idempotent redeem/reverse semantics are implemented; durable concurrent persistence remains an integration concern.
+|Evaluation explanation |IMPLEMENTED |Eligibility, application, coupon, campaign, and benefit paths expose stable reason codes.
+|===
+
+== Milestone direction
+
+Milestone 1: implemented and verified.
+Milestone 2: implemented core; durable coupon issuance/redemption persistence remains follow-up integration work.
+Milestone 3: implemented and verified, including campaign and promotion-level validity windows.
+Milestone 4: promotion-side BXGY/free-gift/free-shipping semantics implemented; direct Carting/Ordering consumption remains a sibling integration task.
+

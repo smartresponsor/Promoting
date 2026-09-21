@@ -1,0 +1,37 @@
+services:
+    App\Promoting\Service\PromotionEvaluationService: ~
+
+    App\Promoting\Service\PromotionApplicationService:
+        arguments:
+            $evaluationService: '@App\Promoting\ServiceInterface\PromotionEvaluationServiceInterface'
+
+    App\Promoting\ServiceInterface\PromotionEvaluationServiceInterface:
+        alias: App\Promoting\Service\PromotionEvaluationService
+
+    App\Promoting\ServiceInterface\PromotionApplicationServiceInterface:
+        alias: App\Promoting\Service\PromotionApplicationService
+
+    App\Promoting\Service\PromotionCouponService: ~
+
+    App\Promoting\ServiceInterface\PromotionCouponServiceInterface:
+        alias: App\Promoting\Service\PromotionCouponService
+
+    App\Promoting\Service\PromotionResolutionService:
+        arguments:
+            $applicationService: '@App\Promoting\ServiceInterface\PromotionApplicationServiceInterface'
+
+    App\Promoting\ServiceInterface\PromotionResolutionServiceInterface:
+        alias: App\Promoting\Service\PromotionResolutionService
+
+    App\Promoting\Service\PromotionCampaignService: ~
+
+    App\Promoting\ServiceInterface\PromotionCampaignServiceInterface:
+        alias: App\Promoting\Service\PromotionCampaignService
+
+    App\Promoting\Service\PromotionBenefitService:
+        arguments:
+            $evaluationService: '@App\Promoting\ServiceInterface\PromotionEvaluationServiceInterface'
+
+    App\Promoting\ServiceInterface\PromotionBenefitServiceInterface:
+        alias: App\Promoting\Service\PromotionBenefitService
+

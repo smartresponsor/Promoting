@@ -1,0 +1,14 @@
+.idea/
+*.iml
+/vendor/
+/var/
+.phpunit.result.cache
+.phpunit.cache/
+.php-cs-fixer.cache
+.phpstan.cache
+.DS_Store
+Thumbs.db
+node_modules/
+/.env.local
+/.env.*.local
+

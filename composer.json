@@ -1,0 +1,125 @@
+{
+  "name": "promoting/promotion",
+  "description": "SmartResponsor Promoting component for commercial incentive rules, coupons, stacking, limits, and campaigns.",
+  "type": "symfony-bundle",
+  "license": "proprietary",
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "require": {
+    "php": "^8.4",
+    "collectioning/collection": "dev-master",
+    "cruding/crud": "dev-master",
+    "easycorp/easyadmin-bundle": "^5.5",
+    "interfacing/interface": "dev-master",
+    "objecting/object": "dev-master",
+    "symfony/console": "^8.1",
+    "symfony/framework-bundle": "^8.1",
+    "symfony/yaml": "^8.1",
+    "tabling/table": "dev-master",
+    "viewing/view": "dev-master"
+  },
+  "require-dev": {
+    "friendsofphp/php-cs-fixer": "^3.95",
+    "phpstan/phpstan": "^2.2",
+    "phpunit/phpunit": "^13.3"
+  },
+  "autoload": {
+    "psr-4": {
+      "App\\Promoting\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "App\\Promoting\\Tests\\": "tests/"
+    }
+  },
+  "repositories": [
+    {
+      "type": "path",
+      "url": "../Objecting",
+      "options": {
+        "symlink": true,
+        "versions": {
+          "objecting/object": "dev-master"
+        }
+      }
+    },
+    {
+      "type": "path",
+      "url": "../Cruding",
+      "options": {
+        "symlink": true,
+        "versions": {
+          "cruding/crud": "dev-master"
+        }
+      }
+    },
+    {
+      "type": "path",
+      "url": "../Collectioning",
+      "options": {
+        "symlink": true,
+        "versions": {
+          "collectioning/collection": "dev-master"
+        }
+      }
+    },
+    {
+      "type": "path",
+      "url": "../Tabling",
+      "options": {
+        "symlink": true,
+        "versions": {
+          "tabling/table": "dev-master"
+        }
+      }
+    },
+    {
+      "type": "path",
+      "url": "../Viewing",
+      "options": {
+        "symlink": true,
+        "versions": {
+          "viewing/view": "dev-master"
+        }
+      }
+    },
+    {
+      "type": "path",
+      "url": "../Interfacing",
+      "options": {
+        "symlink": true,
+        "versions": {
+          "interfacing/interface": "dev-master"
+        }
+      }
+    }
+  ],
+  "extra": {
+    "symfony": {
+      "bundle": "App\\Promoting\\PromotingBundle",
+      "require": "^8.1"
+    }
+  },
+  "scripts": {
+    "test": "phpunit",
+    "test:coverage": [
+      "@php -r \"if (!is_dir('var/coverage')) { mkdir('var/coverage', 0777, true); }\"",
+      "@php -d xdebug.mode=coverage vendor/bin/phpunit --branch-coverage --coverage-text=var/coverage/summary.txt"
+    ],
+    "phpstan": "phpstan analyse -c phpstan.neon",
+    "cs:check": "php-cs-fixer fix --dry-run --diff --verbose",
+    "cs:fix": "php-cs-fixer fix --verbose",
+    "gate": "@php ../Gating/bin/gating check --target=. --profile=.gating/profile.yaml --policy-root=../Gating/.gating --severity-config=../Gating/.gating/config/severity.yaml",
+    "quality": [
+      "@test",
+      "@phpstan",
+      "@cs:check",
+      "@gate"
+    ]
+  },
+  "config": {
+    "sort-packages": true
+  }
+}
+

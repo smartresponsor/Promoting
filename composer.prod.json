@@ -1,0 +1,36 @@
+{
+  "name": "promoting/promotion",
+  "description": "SmartResponsor Promoting component for commercial incentive rules, coupons, stacking, limits, and campaigns.",
+  "type": "symfony-bundle",
+  "license": "proprietary",
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "require": {
+    "php": "^8.4",
+    "collectioning/collection": "dev-master",
+    "cruding/crud": "dev-master",
+    "easycorp/easyadmin-bundle": "^5.5",
+    "interfacing/interface": "dev-master",
+    "objecting/object": "dev-master",
+    "symfony/console": "^8.1",
+    "symfony/framework-bundle": "^8.1",
+    "symfony/yaml": "^8.1",
+    "tabling/table": "dev-master",
+    "viewing/view": "dev-master"
+  },
+  "autoload": {
+    "psr-4": {
+      "App\\Promoting\\": "src/"
+    }
+  },
+  "extra": {
+    "symfony": {
+      "bundle": "App\\Promoting\\PromotingBundle",
+      "require": "^8.1"
+    }
+  },
+  "config": {
+    "sort-packages": true
+  }
+}
+

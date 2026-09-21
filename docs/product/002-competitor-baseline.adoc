@@ -1,0 +1,23 @@
+= Promoting Competitor Baseline
+
+This document defines the evidence contract for later feature-by-feature comparison and records no unsupported benchmark verdicts in this materialization wave.
+
+== Comparison set
+
+* Medusa v2
+* Vendure
+* Sylius
+
+== Classification
+
+AHEAD, PARITY, PARTIAL, MISSING, or NOT_APPLICABLE.
+
+== Evidence per row
+
+* local owning repository
+* local implementation/test/doc evidence
+* competitor capability and evidence
+* boundary decision
+* implementation priority
+* duplication risk
+

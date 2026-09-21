@@ -1,0 +1,27 @@
+= Promoting Roadmap
+
+== Milestone 1
+
+* Promotion.
+* Rule.
+* ApplicationMethod.
+* Fixed/percentage methods.
+* Deterministic explanations.
+
+== Milestone 2
+
+* Coupon lifecycle.
+* Limits and restrictions.
+* Stacking, priority, and exclusivity.
+
+== Milestone 3
+
+* Campaigns, windows, and budgets.
+* Grouped activation, pause, and resume.
+
+== Milestone 4
+
+* Buy-X-Get-Y.
+* Free shipping.
+* Pricing/Carting/Ordering integration.
+

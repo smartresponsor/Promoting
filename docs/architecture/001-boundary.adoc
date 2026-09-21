@@ -1,0 +1,31 @@
+= Promoting Boundary
+
+== Purpose
+
+Promoting owns commercial incentive rules: promotions, coupons, application methods, stacking, limits, and campaigns.
+
+== Owns
+
+* promotion lifecycle and status
+* fixed and percentage discounts
+* eligibility rules
+* coupon/code issuance, validation, redemption, and usage limits
+* stacking, priority, and exclusivity
+* Buy-X-Get-Y style incentives
+* free-shipping incentive semantics
+* campaign grouping, validity windows, and budgets
+* deterministic eligibility/application explanations
+
+== Does not own
+
+* base or contextual pricing; Pricing owns it
+* merchandise placement/presentation; Merchandising owns it
+* Cart/Order aggregates; Carting and Ordering own them
+* payments; Paying owns them
+* loyalty points and tier balances; Rewarding owns them
+* an independent Campaigning repository; campaigns remain inside Promoting until a separately justified lifecycle exists
+
+== Current implementation scope
+
+Promoting implements deterministic monetary promotion evaluation/application, coupon validation and idempotent redemption/reversal semantics, priority/stacking/exclusivity, campaign lifecycle/windows/budgets, and typed BXGY/free-gift/free-shipping benefit facts. Durable redemption persistence and direct sibling-consumer wiring remain integration concerns; ownership boundaries above remain unchanged.
+
