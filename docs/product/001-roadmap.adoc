@@ -32,3 +32,10 @@
 * Customer-bound coupons.
 * Coupon validity windows with explicit evaluation time.
 
+== Milestone 6
+
+* Immutable promotion catalog.
+* Promotion-id uniqueness.
+* Deterministic eligible selection.
+* Preserve per-promotion evaluation results for auditability.
+

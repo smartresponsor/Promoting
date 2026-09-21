@@ -11,6 +11,7 @@ Promoting now has an executable commercial-incentive core. Pricing remains autho
 |===
 |Capability |Status |Audit
 |Promotion lifecycle |IMPLEMENTED |Immutable promotion definition with explicit active/inactive lifecycle.
+|Promotion catalog/selection |IMPLEMENTED |Immutable catalog enforces promotion-id uniqueness and selects eligible promotions deterministically while preserving every evaluation result.
 |Conditions/eligibility rules |IMPLEMENTED |Ordered deterministic minimum-subtotal and currency conditions with reason codes.
 |Actions/application methods |IMPLEMENTED |Fixed and basis-point percentage monetary actions plus typed non-price benefit evaluation.
 |Coupon issuance/validation |IMPLEMENTED |Immutable issuance book enforces normalized uniqueness; issue/deactivate lifecycle, customer binding, validity windows, and deterministic validation are implemented.
@@ -32,4 +33,5 @@ Milestone 2: implemented core; durable coupon issuance/redemption persistence re
 Milestone 3: implemented and verified, including campaign and promotion-level validity windows.
 Milestone 4: promotion-side BXGY/free-gift/free-shipping semantics implemented; direct Carting/Ordering consumption remains a sibling integration task.
 Milestone 5: coupon issuance lifecycle, audience binding, uniqueness, and coupon validity windows implemented and verified.
+Milestone 6: immutable promotion catalog and deterministic eligible selection implemented.
 

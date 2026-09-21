@@ -40,3 +40,10 @@ services:
     App\Promoting\ServiceInterface\PromotionBenefitServiceInterface:
         alias: App\Promoting\Service\PromotionBenefitService
 
+    App\Promoting\Service\PromotionSelectionService:
+        arguments:
+            $evaluationService: '@App\Promoting\ServiceInterface\PromotionEvaluationServiceInterface'
+
+    App\Promoting\ServiceInterface\PromotionSelectionServiceInterface:
+        alias: App\Promoting\Service\PromotionSelectionService
+
