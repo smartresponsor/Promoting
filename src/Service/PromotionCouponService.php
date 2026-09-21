@@ -19,6 +19,7 @@ final class PromotionCouponService implements PromotionCouponServiceInterface
         PromotionCoupon $coupon,
         PromotionRedemptionLedger $ledger,
         string $customerId,
+        ?\DateTimeImmutable $at = null,
     ): PromotionCouponValidationDTO {
         if ('' === trim($customerId)) {
             throw new \InvalidArgumentException('Customer id cannot be empty.');
@@ -28,6 +29,29 @@ final class PromotionCouponService implements PromotionCouponServiceInterface
         }
 
         $reasons = ['coupon_active'];
+
+        if (null !== $coupon->customerId && $coupon->customerId !== $customerId) {
+            return new PromotionCouponValidationDTO(false, [...$reasons, 'coupon_customer_mismatch']);
+        }
+        $reasons[] = null === $coupon->customerId ? 'coupon_audience_unrestricted' : 'coupon_customer_matched';
+
+        if (null !== $coupon->issuedAt || null !== $coupon->startsAt || null !== $coupon->endsAt) {
+            if (null === $at) {
+                return new PromotionCouponValidationDTO(false, [...$reasons, 'coupon_time_context_missing']);
+            }
+            if (null !== $coupon->issuedAt && $at < $coupon->issuedAt) {
+                return new PromotionCouponValidationDTO(false, [...$reasons, 'coupon_not_issued_yet']);
+            }
+            if (null !== $coupon->startsAt && $at < $coupon->startsAt) {
+                return new PromotionCouponValidationDTO(false, [...$reasons, 'coupon_not_started']);
+            }
+            $reasons[] = 'coupon_start_window_met';
+            if (null !== $coupon->endsAt && $at > $coupon->endsAt) {
+                return new PromotionCouponValidationDTO(false, [...$reasons, 'coupon_ended']);
+            }
+            $reasons[] = 'coupon_end_window_met';
+        }
+
         if (null !== $coupon->usageLimit && $ledger->redeemedCount($coupon->code) >= $coupon->usageLimit) {
             return new PromotionCouponValidationDTO(false, [...$reasons, 'coupon_usage_limit_reached']);
         }
@@ -50,6 +74,7 @@ final class PromotionCouponService implements PromotionCouponServiceInterface
         PromotionRedemptionLedger $ledger,
         string $customerId,
         string $orderId,
+        ?\DateTimeImmutable $at = null,
     ): PromotionCouponRedemptionResultDTO {
         if ('' === trim($orderId)) {
             throw new \InvalidArgumentException('Order id cannot be empty.');
@@ -65,7 +90,7 @@ final class PromotionCouponService implements PromotionCouponServiceInterface
             );
         }
 
-        $validation = $this->validate($coupon, $ledger, $customerId);
+        $validation = $this->validate($coupon, $ledger, $customerId, $at);
         if (!$validation->valid) {
             return new PromotionCouponRedemptionResultDTO(false, $ledger, null, $validation->reasons);
         }

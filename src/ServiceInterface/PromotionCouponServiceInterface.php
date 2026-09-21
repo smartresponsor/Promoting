@@ -17,6 +17,7 @@ interface PromotionCouponServiceInterface
         PromotionCoupon $coupon,
         PromotionRedemptionLedger $ledger,
         string $customerId,
+        ?\DateTimeImmutable $at = null,
     ): PromotionCouponValidationDTO;
 
     /** Redeems once for a coupon/customer/order key and returns the updated ledger. */
@@ -25,6 +26,7 @@ interface PromotionCouponServiceInterface
         PromotionRedemptionLedger $ledger,
         string $customerId,
         string $orderId,
+        ?\DateTimeImmutable $at = null,
     ): PromotionCouponRedemptionResultDTO;
 
     /** Reverses one active redemption idempotently. */

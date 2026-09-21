@@ -29,7 +29,7 @@ final class PromotionCouponServiceTest extends TestCase
 
         $blocked = $service->redeem($coupon, $first->ledger, 'customer-2', 'order-2');
         self::assertFalse($blocked->redeemed);
-        self::assertSame(['coupon_active', 'coupon_usage_limit_reached'], $blocked->reasons);
+        self::assertSame(['coupon_active', 'coupon_audience_unrestricted', 'coupon_usage_limit_reached'], $blocked->reasons);
 
         $reversed = $service->reverse($coupon, $first->ledger, 'customer-1', 'order-1');
         self::assertTrue($reversed->redeemed);
@@ -50,7 +50,7 @@ final class PromotionCouponServiceTest extends TestCase
         $sameCustomer = $service->redeem($coupon, $ledger, 'customer-1', 'order-2');
         self::assertFalse($sameCustomer->redeemed);
         self::assertSame(
-            ['coupon_active', 'coupon_usage_limit_available', 'coupon_customer_limit_reached'],
+            ['coupon_active', 'coupon_audience_unrestricted', 'coupon_usage_limit_available', 'coupon_customer_limit_reached'],
             $sameCustomer->reasons,
         );
 

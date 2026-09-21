@@ -25,3 +25,10 @@
 * Free shipping.
 * Pricing/Carting/Ordering integration.
 
+== Milestone 5
+
+* Coupon issuance book and normalized uniqueness.
+* Issue/deactivate lifecycle.
+* Customer-bound coupons.
+* Coupon validity windows with explicit evaluation time.
+

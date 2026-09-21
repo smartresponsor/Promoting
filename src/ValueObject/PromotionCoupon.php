@@ -17,6 +17,10 @@ final readonly class PromotionCoupon
         public ?int $usageLimit = null,
         public ?int $perCustomerLimit = null,
         public PromotionCouponStatus $status = PromotionCouponStatus::Active,
+        public ?\DateTimeImmutable $issuedAt = null,
+        public ?\DateTimeImmutable $startsAt = null,
+        public ?\DateTimeImmutable $endsAt = null,
+        public ?string $customerId = null,
     ) {
         $normalizedCode = strtoupper(trim($code));
         if ('' === $normalizedCode) {
@@ -31,7 +35,29 @@ final readonly class PromotionCoupon
         if (null !== $perCustomerLimit && $perCustomerLimit < 1) {
             throw new \InvalidArgumentException('Coupon per-customer limit must be at least one.');
         }
+        if (null !== $startsAt && null !== $endsAt && $startsAt > $endsAt) {
+            throw new \InvalidArgumentException('Coupon start cannot be after coupon end.');
+        }
+        if (null !== $customerId && '' === trim($customerId)) {
+            throw new \InvalidArgumentException('Coupon customer id cannot be empty when provided.');
+        }
 
         $this->code = $normalizedCode;
+    }
+
+    /** Returns the same coupon with another lifecycle status. */
+    public function withStatus(PromotionCouponStatus $status): self
+    {
+        return new self(
+            $this->code,
+            $this->promotionId,
+            $this->usageLimit,
+            $this->perCustomerLimit,
+            $status,
+            $this->issuedAt,
+            $this->startsAt,
+            $this->endsAt,
+            $this->customerId,
+        );
     }
 }
