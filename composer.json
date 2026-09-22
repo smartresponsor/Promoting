@@ -21,7 +21,10 @@
   "require-dev": {
     "friendsofphp/php-cs-fixer": "^3.95",
     "phpstan/phpstan": "^2.2",
-    "phpunit/phpunit": "^13.3"
+    "phpunit/phpunit": "^13.3",
+    "symfony/test-pack": "^1.2",
+    "symfony/panther": "^2.4",
+    "gating/gate": "dev-master"
   },
   "autoload": {
     "psr-4": {
@@ -93,6 +96,16 @@
           "interfacing/interface": "dev-master"
         }
       }
+    },
+    {
+      "type": "path",
+      "url": "../Gating",
+      "options": {
+        "symlink": true,
+        "versions": {
+          "gating/gate": "dev-master"
+        }
+      }
     }
   ],
   "extra": {
@@ -110,11 +123,15 @@
     "phpstan": "phpstan analyse -c phpstan.neon",
     "cs:check": "php-cs-fixer fix --dry-run --diff --verbose",
     "cs:fix": "php-cs-fixer fix --verbose",
-    "gate": "@php ../Gating/bin/gating check --target=. --profile=.gating/profile.yaml --policy-root=../Gating/.gating --severity-config=../Gating/.gating/config/severity.yaml",
+    "quality:ui": "npm test",
+    "test:behavioral-coverage": "@php tool/behavioral-coverage.php",
+    "gate": "@php vendor/bin/gating check --target=. --profile=config/promotion_gating_profile.json",
     "quality": [
       "@test",
       "@phpstan",
       "@cs:check",
+      "@quality:ui",
+      "@test:behavioral-coverage",
       "@gate"
     ]
   },
@@ -122,4 +139,3 @@
     "sort-packages": true
   }
 }
-

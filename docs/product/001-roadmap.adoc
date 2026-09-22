@@ -39,3 +39,10 @@
 * Deterministic eligible selection.
 * Preserve per-promotion evaluation results for auditability.
 
+== Milestone 7
+
+* Coupon-code lookup.
+* Coupon validation before promotion lookup.
+* Coupon-to-promotion catalog resolution.
+* Combined coupon and promotion eligibility explanation.
+

@@ -15,6 +15,7 @@ Promoting now has an executable commercial-incentive core. Pricing remains autho
 |Conditions/eligibility rules |IMPLEMENTED |Ordered deterministic minimum-subtotal and currency conditions with reason codes.
 |Actions/application methods |IMPLEMENTED |Fixed and basis-point percentage monetary actions plus typed non-price benefit evaluation.
 |Coupon issuance/validation |IMPLEMENTED |Immutable issuance book enforces normalized uniqueness; issue/deactivate lifecycle, customer binding, validity windows, and deterministic validation are implemented.
+|Coupon-to-promotion resolution |IMPLEMENTED |Coupon codes resolve through issuance validation and promotion-catalog lookup, preserving combined coupon and promotion eligibility reasons without mutating redemption state.
 |Usage/per-customer limits |IMPLEMENTED |Global and per-customer coupon limits are enforced against the supplied redemption ledger.
 |Date windows |IMPLEMENTED |Promotion and campaign windows are explicit and deterministic; promotion evaluation requires caller-supplied time when a window exists.
 |Priority/stacking/exclusivity |IMPLEMENTED |Priority-descending/id-ascending resolution with explicit stackable/exclusive policy.
@@ -34,4 +35,5 @@ Milestone 3: implemented and verified, including campaign and promotion-level va
 Milestone 4: promotion-side BXGY/free-gift/free-shipping semantics implemented; direct Carting/Ordering consumption remains a sibling integration task.
 Milestone 5: coupon issuance lifecycle, audience binding, uniqueness, and coupon validity windows implemented and verified.
 Milestone 6: immutable promotion catalog and deterministic eligible selection implemented.
+Milestone 7: coupon-to-promotion catalog resolution implemented with combined eligibility explanation.
 

@@ -68,3 +68,20 @@ Added an immutable promotion catalog with promotion-id uniqueness and determinis
 
 Verification: PHPUnit 24 tests / 83 assertions green; PHPStan zero errors; PHP-CS-Fixer clean; Gating 17/17 with zero failures/warnings/skips; Xdebug branch-coverage execution green.
 
+## 2026-09-22 Milestone 7
+
+Added coupon-to-promotion resolution across the immutable coupon book and promotion catalog. Resolution validates coupon lifecycle/audience/limits/window first, resolves the linked promotion second, then evaluates the promotion and preserves the combined reason trail without mutating redemption state.
+
+### Current RC verification and tooling closure
+
+- Re-read Promoting boundary, current capability audit/roadmap, coupon/evaluation/application services, Composer/runtime configuration, current dirty slice, and the shared Canonization/Gating plus Objecting/Cruding/Viewing/Interfacing contour.
+- Market comparison confirms deterministic rank/stacking, coupon validity/usage limits, campaign windows, and explainable eligibility as promotion-engine concerns; Pricing, Carting, Ordering, Shipping, Rewarding, and payment execution remain external owners.
+- Preserved the pre-existing Milestone 7 implementation and verified it rather than replacing it.
+- Added canonical consumer Gating integration, target-owned Gating profile, Symfony Test Pack/Panther, repository-local Playwright smoke, and reproducible behavioral coverage evidence.
+- Untracked generated config/reference.php and ignored it per Canon037; authoritative configuration remains source-controlled.
+- `composer quality`: PASS — PHPUnit 28/28 with 98 assertions, PHPStan clean, PHP-CS-Fixer clean, Playwright 1/1, behavioral coverage evidence generated, Gating 68 rules with 0 failures.
+- `composer validate --strict --check-lock`: PASS.
+- Fresh coverage: lines 84.3%, methods 42.3%, branches 79.2%. Canon040 remains a non-blocking HIGH_TEST_DEBT warning because method coverage is below target; line and branch thresholds pass.
+- No persistence or product HTTP API was invented. Coupon resolution is read-only against coupon book/redemption ledger/catalog state and does not mutate redemption or absorb neighboring ownership.
+- Git has no configured remote/upstream, so publication/PR is unavailable after local integration.
+

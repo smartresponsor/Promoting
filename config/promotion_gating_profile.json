@@ -1,0 +1,17 @@
+{
+  "component": {
+    "name": "Promoting",
+    "nameEntity": "promotion",
+    "namespace": "App\\Promoting",
+    "business_prefix": "Promotion",
+    "subject_prefix": "Promotion",
+    "subject_tokens": ["Promotion"],
+    "database_prefix": "promotion_",
+    "route_owner_root": "promotion",
+    "route_owner_roots": ["promotion"],
+    "mutation_mode": "guarded",
+    "secret_scan": "enabled",
+    "docblock_preservation": "enabled",
+    "release": {"evidence_required": false}
+  }
+}
