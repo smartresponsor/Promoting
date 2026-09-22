@@ -21,6 +21,7 @@ final readonly class PromotionCampaignSelectionService implements PromotionCampa
     ) {
     }
 
+    /** Selects eligible catalog promotions belonging to an available campaign. */
     public function select(
         PromotionCampaign $campaign,
         PromotionCatalog $catalog,

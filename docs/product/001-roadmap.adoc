@@ -60,3 +60,10 @@
 * Preserve missing-member audit reasons.
 * Select eligible campaign promotions deterministically.
 
+== Milestone 10
+
+* Resolve and apply campaign-scoped promotions.
+* Enforce remaining campaign budget before spend.
+* Record discount amount as campaign spend only after successful application.
+* Reject zero-discount and budget-overflow applications without mutating campaign state.
+

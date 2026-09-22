@@ -97,3 +97,9 @@ Added campaign-scoped promotion selection. Campaign availability is evaluated fi
 
 Verification: PHPUnit 35 tests / 129 assertions green; PHPStan clean; PHP-CS-Fixer clean; Playwright/behavioral coverage green; Gating 68 rules with 0 failures and one non-blocking Canon040 HIGH_TEST_DEBT warning. Fresh PHP coverage: lines 84.4%, methods 46.8%, branches 80.3%.
 
+## 2026-09-22 Milestone 10
+
+Added campaign application with atomic spend accounting. Campaign-scoped eligible promotions run through the existing stacking resolver; zero-discount applications do not consume budget; a discount that would exceed the remaining campaign budget is rejected without changing campaign state; successful discounts are recorded as cumulative spentMinor.
+
+Verification: PHPUnit 39 tests / 146 assertions green; PHPStan clean; PHP-CS-Fixer clean; Playwright/behavioral coverage green; Gating 68 rules with 0 failures and one non-blocking Canon040 HIGH_TEST_DEBT warning. Semantic PHPDoc coverage is 75.0%. Fresh PHP coverage: lines 84.5%, methods 47.5%, branches 80.6%.
+

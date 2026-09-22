@@ -72,3 +72,12 @@ services:
     App\Promoting\ServiceInterface\PromotionCampaignSelectionServiceInterface:
         alias: App\Promoting\Service\PromotionCampaignSelectionService
 
+    App\Promoting\Service\PromotionCampaignApplicationService:
+        arguments:
+            $selectionService: '@App\Promoting\ServiceInterface\PromotionCampaignSelectionServiceInterface'
+            $resolutionService: '@App\Promoting\ServiceInterface\PromotionResolutionServiceInterface'
+            $campaignService: '@App\Promoting\ServiceInterface\PromotionCampaignServiceInterface'
+
+    App\Promoting\ServiceInterface\PromotionCampaignApplicationServiceInterface:
+        alias: App\Promoting\Service\PromotionCampaignApplicationService
+
