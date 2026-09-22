@@ -15,7 +15,13 @@ final readonly class PromotionRedemption
         public string $orderId,
         public PromotionRedemptionStatus $status = PromotionRedemptionStatus::Redeemed,
     ) {
-        if ('' === trim($couponCode) || '' === trim($customerId) || '' === trim($orderId)) {
+        if ('' === trim($couponCode)) {
+            throw new \InvalidArgumentException('Coupon code, customer id, and order id are required for redemption.');
+        }
+        if ('' === trim($customerId)) {
+            throw new \InvalidArgumentException('Coupon code, customer id, and order id are required for redemption.');
+        }
+        if ('' === trim($orderId)) {
             throw new \InvalidArgumentException('Coupon code, customer id, and order id are required for redemption.');
         }
     }

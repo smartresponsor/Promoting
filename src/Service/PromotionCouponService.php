@@ -21,7 +21,8 @@ final class PromotionCouponService implements PromotionCouponServiceInterface
         string $customerId,
         ?\DateTimeImmutable $at = null,
     ): PromotionCouponValidationDTO {
-        if ('' === trim($customerId)) {
+        $trimmedCustomerId = trim($customerId);
+        if ('' === $trimmedCustomerId) {
             throw new \InvalidArgumentException('Customer id cannot be empty.');
         }
         if (PromotionCouponStatus::Active !== $coupon->status) {
@@ -76,7 +77,8 @@ final class PromotionCouponService implements PromotionCouponServiceInterface
         string $orderId,
         ?\DateTimeImmutable $at = null,
     ): PromotionCouponRedemptionResultDTO {
-        if ('' === trim($orderId)) {
+        $trimmedOrderId = trim($orderId);
+        if ('' === $trimmedOrderId) {
             throw new \InvalidArgumentException('Order id cannot be empty.');
         }
 

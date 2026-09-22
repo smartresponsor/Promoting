@@ -26,13 +26,16 @@ final readonly class PromotionApplicationService implements PromotionApplication
         $reasons = $evaluation->reasons;
 
         if ($evaluation->eligible) {
-            $discountAmountMinor = match ($promotion->action->method) {
-                PromotionApplicationMethod::Fixed => min($request->subtotalMinor, $promotion->action->amount),
-                PromotionApplicationMethod::Percentage => $this->percentageDiscount(
+            if (PromotionApplicationMethod::Fixed === $promotion->action->method) {
+                $discountAmountMinor = $promotion->action->amount > $request->subtotalMinor
+                    ? $request->subtotalMinor
+                    : $promotion->action->amount;
+            } else {
+                $discountAmountMinor = $this->percentageDiscount(
                     $request->subtotalMinor,
                     $promotion->action->amount,
-                ),
-            };
+                );
+            }
             $reasons[] = 'promotion_applied_'.$promotion->action->method->value;
         } else {
             $reasons[] = 'promotion_not_applied';
@@ -54,6 +57,6 @@ final readonly class PromotionApplicationService implements PromotionApplication
         $whole = intdiv($amountMinor, 10_000) * $basisPoints;
         $remainder = intdiv(($amountMinor % 10_000) * $basisPoints, 10_000);
 
-        return min($amountMinor, $whole + $remainder);
+        return $whole + $remainder;
     }
 }

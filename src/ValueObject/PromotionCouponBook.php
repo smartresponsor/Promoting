@@ -22,7 +22,8 @@ final readonly class PromotionCouponBook
     /** Returns a coupon by normalized code when it exists. */
     public function find(string $code): ?PromotionCoupon
     {
-        $normalizedCode = strtoupper(trim($code));
+        $normalizedCode = trim($code);
+        $normalizedCode = strtoupper($normalizedCode);
         foreach ($this->coupons as $coupon) {
             if ($normalizedCode === $coupon->code) {
                 return $coupon;

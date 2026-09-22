@@ -60,6 +60,26 @@ final class PromotionBenefitServiceTest extends TestCase
         );
     }
 
+    public function testBuyXGetYDoesNotGrantWhenQualifyingSkuIsAbsent(): void
+    {
+        $promotion = new Promotion(
+            'bxgy-missing',
+            'Buy two get one',
+            new PromotionRule(),
+            PromotionAction::fixed(0),
+            benefit: PromotionBenefit::buyXGetY('SKU-A', 2, 'SKU-B', 1),
+        );
+
+        $result = (new PromotionBenefitService(new PromotionEvaluationService()))->evaluate(
+            $promotion,
+            new PromotionBenefitRequestDTO(5000, 'USD', []),
+        );
+
+        self::assertFalse($result->eligible);
+        self::assertSame(0, $result->rewardQuantity);
+        self::assertContains('promotion_buy_x_get_y_quantity_not_met', $result->reasons);
+    }
+
     public function testFreeGiftProducesGiftEntitlement(): void
     {
         $promotion = new Promotion(

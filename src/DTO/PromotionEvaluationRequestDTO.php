@@ -18,7 +18,8 @@ final readonly class PromotionEvaluationRequestDTO
             throw new \InvalidArgumentException('Promotion evaluation subtotal cannot be negative.');
         }
 
-        $currencyCode = strtoupper(trim($currencyCode));
+        $currencyCode = trim($currencyCode);
+        $currencyCode = strtoupper($currencyCode);
         if (1 !== preg_match('/^[A-Z]{3}$/', $currencyCode)) {
             throw new \InvalidArgumentException('Currency code must contain exactly three ASCII letters.');
         }

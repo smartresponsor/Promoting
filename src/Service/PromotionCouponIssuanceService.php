@@ -53,7 +53,10 @@ final class PromotionCouponIssuanceService implements PromotionCouponIssuanceSer
     ): PromotionCouponIssueResultDTO {
         $coupon = $book->find($code);
         if (null === $coupon) {
-            throw new \DomainException(sprintf('Coupon code "%s" is not issued.', strtoupper(trim($code))));
+            $normalizedCode = trim($code);
+            $normalizedCode = strtoupper($normalizedCode);
+            $message = 'Coupon code "'.$normalizedCode.'" is not issued.';
+            throw new \DomainException($message);
         }
 
         if (PromotionCouponStatus::Inactive === $coupon->status) {

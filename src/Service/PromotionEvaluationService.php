@@ -54,13 +54,18 @@ final class PromotionEvaluationService implements PromotionEvaluationServiceInte
         PromotionCondition $condition,
         PromotionEvaluationRequestDTO $request,
     ): string {
-        return match ($condition->type) {
-            PromotionConditionType::MinimumSubtotal => $request->subtotalMinor >= $condition->expected
-                ? 'minimum_subtotal_met'
-                : 'minimum_subtotal_not_met',
-            PromotionConditionType::Currency => $request->currencyCode === $condition->expected
-                ? 'currency_matched'
-                : 'currency_mismatch',
-        };
+        if (PromotionConditionType::MinimumSubtotal === $condition->type) {
+            if ($request->subtotalMinor >= $condition->expected) {
+                return 'minimum_subtotal_met';
+            }
+
+            return 'minimum_subtotal_not_met';
+        }
+
+        if ($request->currencyCode === $condition->expected) {
+            return 'currency_matched';
+        }
+
+        return 'currency_mismatch';
     }
 }

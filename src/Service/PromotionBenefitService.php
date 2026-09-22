@@ -44,9 +44,12 @@ final readonly class PromotionBenefitService implements PromotionBenefitServiceI
 
         $benefit = $promotion->benefit;
 
-        return match ($benefit->type) {
-            PromotionBenefitType::BuyXGetY => $this->buyXGetY($promotion, $request, $evaluation->reasons),
-            PromotionBenefitType::FreeGift => new PromotionBenefitResultDTO(
+        if (PromotionBenefitType::BuyXGetY === $benefit->type) {
+            return $this->buyXGetY($promotion, $request, $evaluation->reasons);
+        }
+
+        if (PromotionBenefitType::FreeGift === $benefit->type) {
+            return new PromotionBenefitResultDTO(
                 $promotion->id,
                 true,
                 $benefit->type,
@@ -54,17 +57,18 @@ final readonly class PromotionBenefitService implements PromotionBenefitServiceI
                 $benefit->rewardQuantity,
                 false,
                 [...$evaluation->reasons, 'promotion_free_gift_granted'],
-            ),
-            PromotionBenefitType::FreeShipping => new PromotionBenefitResultDTO(
-                $promotion->id,
-                true,
-                $benefit->type,
-                null,
-                0,
-                true,
-                [...$evaluation->reasons, 'promotion_free_shipping_eligible'],
-            ),
-        };
+            );
+        }
+
+        return new PromotionBenefitResultDTO(
+            $promotion->id,
+            true,
+            $benefit->type,
+            null,
+            0,
+            true,
+            [...$evaluation->reasons, 'promotion_free_shipping_eligible'],
+        );
     }
 
     /** @param list<string> $evaluationReasons */
@@ -73,12 +77,14 @@ final readonly class PromotionBenefitService implements PromotionBenefitServiceI
         PromotionBenefitRequestDTO $request,
         array $evaluationReasons,
     ): PromotionBenefitResultDTO {
+        /** @var \App\Promoting\ValueObject\PromotionBenefit $benefit */
         $benefit = $promotion->benefit;
-        if (null === $benefit || null === $benefit->qualifyingSku || null === $benefit->rewardSku) {
-            throw new \LogicException('BXGY benefit definition is incomplete.');
-        }
+        /** @var non-empty-string $qualifyingSku */
+        $qualifyingSku = $benefit->qualifyingSku;
+        /** @var non-empty-string $rewardSku */
+        $rewardSku = $benefit->rewardSku;
 
-        $qualifyingQuantity = $request->itemQuantities[$benefit->qualifyingSku] ?? 0;
+        $qualifyingQuantity = $request->itemQuantities[$qualifyingSku] ?? 0;
         $blocks = intdiv($qualifyingQuantity, $benefit->requiredQuantity);
         $rewardQuantity = $blocks * $benefit->rewardQuantity;
 
@@ -86,7 +92,7 @@ final readonly class PromotionBenefitService implements PromotionBenefitServiceI
             $promotion->id,
             $rewardQuantity > 0,
             $benefit->type,
-            $rewardQuantity > 0 ? $benefit->rewardSku : null,
+            $rewardQuantity > 0 ? $rewardSku : null,
             $rewardQuantity,
             false,
             $rewardQuantity > 0

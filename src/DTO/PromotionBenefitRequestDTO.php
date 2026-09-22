@@ -22,7 +22,8 @@ final readonly class PromotionBenefitRequestDTO
             throw new \InvalidArgumentException('Subtotal cannot be negative.');
         }
 
-        $normalizedCurrency = strtoupper(trim($currencyCode));
+        $normalizedCurrency = trim($currencyCode);
+        $normalizedCurrency = strtoupper($normalizedCurrency);
         if (1 !== preg_match('/^[A-Z]{3}$/', $normalizedCurrency)) {
             throw new \InvalidArgumentException('Currency code must be a three-letter ISO-style code.');
         }

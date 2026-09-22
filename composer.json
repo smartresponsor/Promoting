@@ -120,6 +120,10 @@
       "@php -r \"if (!is_dir('var/coverage')) { mkdir('var/coverage', 0777, true); }\"",
       "@php -d xdebug.mode=coverage vendor/bin/phpunit --branch-coverage --coverage-text=var/coverage/summary.txt"
     ],
+    "test:coverage:html": [
+      "@php -r \"if (!is_dir('var/coverage/html')) { mkdir('var/coverage/html', 0777, true); }\"",
+      "@php -d xdebug.mode=coverage vendor/bin/phpunit --branch-coverage --coverage-html=var/coverage/html"
+    ],
     "phpstan": "phpstan analyse -c phpstan.neon",
     "cs:check": "php-cs-fixer fix --dry-run --diff --verbose",
     "cs:fix": "php-cs-fixer fix --verbose",

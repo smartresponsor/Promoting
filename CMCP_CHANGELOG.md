@@ -109,3 +109,9 @@ Added explicit promotion activation modes. Promotions default to automatic activ
 
 Verification: PHPUnit 40 tests / 150 assertions green; PHPStan clean; PHP-CS-Fixer clean; Playwright/behavioral coverage green; Gating 68 rules with 0 failures and one non-blocking Canon040 HIGH_TEST_DEBT warning. Semantic PHPDoc coverage remains 75.0%; fresh PHP coverage remains lines 84.5%, methods 47.5%, branches 80.6%.
 
+## 2026-09-22 coverage hardening
+
+Closed the remaining Canon040 test-debt warning without weakening domain invariants. Added invariant, edge-case, coverage-completion, and standalone Kernel tests; simplified opaque CFG-heavy expressions into explicit business branches; removed one unreachable BXGY defensive branch already guaranteed by PromotionBenefit construction; and added a reusable local HTML branch-coverage script under ignored var/coverage/html.
+
+Final verification: PHPUnit 120 tests / 304 assertions green; PHPStan clean; PHP-CS-Fixer clean; Playwright/behavioral coverage green; Gating 68 rules with 0 failures and 0 warnings. Canon040 now passes at lines 100.0%, methods 80.0%, branches 94.7%; Canon031 remains green at 75.0% contract-method PHPDoc coverage.
+
