@@ -21,6 +21,7 @@ Promoting now has an executable commercial-incentive core. Pricing remains autho
 |Date windows |IMPLEMENTED |Promotion and campaign windows are explicit and deterministic; promotion evaluation requires caller-supplied time when a window exists.
 |Priority/stacking/exclusivity |IMPLEMENTED |Priority-descending/id-ascending resolution with explicit stackable/exclusive policy.
 |Campaign grouping |IMPLEMENTED |Campaigns group promotion identifiers and support activate/pause/resume lifecycle.
+|Campaign-scoped selection |IMPLEMENTED |Available campaigns resolve member IDs through the promotion catalog, preserve missing-member reasons, and select eligible members deterministically.
 |Campaign budgets |IMPLEMENTED |Cumulative spend is bounded and budget exhaustion is evaluated deterministically.
 |Buy-X-Get-Y/free gift |IMPLEMENTED |Typed entitlement facts preserve qualifying/reward SKU and quantity semantics.
 |Free shipping incentive |IMPLEMENTED |Promoting emits free-shipping eligibility only; Shipping retains shipment execution ownership.
@@ -38,4 +39,5 @@ Milestone 5: coupon issuance lifecycle, audience binding, uniqueness, and coupon
 Milestone 6: immutable promotion catalog and deterministic eligible selection implemented.
 Milestone 7: coupon-to-promotion catalog resolution implemented with combined eligibility explanation.
 Milestone 8: end-to-end coupon application transaction implemented with post-application redemption and idempotent replay.
+Milestone 9: campaign-scoped catalog resolution and eligible promotion selection implemented.
 

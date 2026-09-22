@@ -64,3 +64,11 @@ services:
     App\Promoting\ServiceInterface\PromotionCouponApplicationServiceInterface:
         alias: App\Promoting\Service\PromotionCouponApplicationService
 
+    App\Promoting\Service\PromotionCampaignSelectionService:
+        arguments:
+            $campaignService: '@App\Promoting\ServiceInterface\PromotionCampaignServiceInterface'
+            $selectionService: '@App\Promoting\ServiceInterface\PromotionSelectionServiceInterface'
+
+    App\Promoting\ServiceInterface\PromotionCampaignSelectionServiceInterface:
+        alias: App\Promoting\Service\PromotionCampaignSelectionService
+

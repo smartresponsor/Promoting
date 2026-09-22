@@ -91,3 +91,9 @@ Added an end-to-end coupon application transaction over explicit immutable state
 
 Verification: PHPUnit 31 tests / 114 assertions green; PHPStan clean; PHP-CS-Fixer clean; Playwright/behavioral coverage green; Gating 68 rules with 0 failures and one non-blocking Canon040 HIGH_TEST_DEBT warning. Fresh PHP coverage: lines 83.3%, methods 43.2%, branches 79.5%.
 
+## 2026-09-22 Milestone 9
+
+Added campaign-scoped promotion selection. Campaign availability is evaluated first with explicit time context; member IDs are resolved through PromotionCatalog; missing members remain visible as audit reasons; resolved members are evaluated and ordered through the existing deterministic selection service.
+
+Verification: PHPUnit 35 tests / 129 assertions green; PHPStan clean; PHP-CS-Fixer clean; Playwright/behavioral coverage green; Gating 68 rules with 0 failures and one non-blocking Canon040 HIGH_TEST_DEBT warning. Fresh PHP coverage: lines 84.4%, methods 46.8%, branches 80.3%.
+

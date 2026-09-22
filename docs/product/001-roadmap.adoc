@@ -53,3 +53,10 @@
 * Record redemption only after successful application.
 * Preserve idempotent replay without duplicate redemption.
 
+== Milestone 9
+
+* Validate campaign availability before member selection.
+* Resolve campaign promotion IDs through the promotion catalog.
+* Preserve missing-member audit reasons.
+* Select eligible campaign promotions deterministically.
+
