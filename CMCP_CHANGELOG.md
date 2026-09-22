@@ -85,3 +85,9 @@ Added coupon-to-promotion resolution across the immutable coupon book and promot
 - No persistence or product HTTP API was invented. Coupon resolution is read-only against coupon book/redemption ledger/catalog state and does not mutate redemption or absorb neighboring ownership.
 - Git has no configured remote/upstream, so publication/PR is unavailable after local integration.
 
+## 2026-09-22 Milestone 8
+
+Added an end-to-end coupon application transaction over explicit immutable state: resolve coupon, evaluate/apply its linked promotion, then record redemption only after successful application. Same coupon/customer/order replays validate against a ledger view that excludes that same active redemption, then flow through the existing idempotent redemption branch without duplicating usage.
+
+Verification: PHPUnit 31 tests / 114 assertions green; PHPStan clean; PHP-CS-Fixer clean; Playwright/behavioral coverage green; Gating 68 rules with 0 failures and one non-blocking Canon040 HIGH_TEST_DEBT warning. Fresh PHP coverage: lines 83.3%, methods 43.2%, branches 79.5%.
+

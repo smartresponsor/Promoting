@@ -55,3 +55,12 @@ services:
     App\Promoting\ServiceInterface\PromotionCouponResolutionServiceInterface:
         alias: App\Promoting\Service\PromotionCouponResolutionService
 
+    App\Promoting\Service\PromotionCouponApplicationService:
+        arguments:
+            $resolutionService: '@App\Promoting\ServiceInterface\PromotionCouponResolutionServiceInterface'
+            $applicationService: '@App\Promoting\ServiceInterface\PromotionApplicationServiceInterface'
+            $couponService: '@App\Promoting\ServiceInterface\PromotionCouponServiceInterface'
+
+    App\Promoting\ServiceInterface\PromotionCouponApplicationServiceInterface:
+        alias: App\Promoting\Service\PromotionCouponApplicationService
+

@@ -46,3 +46,10 @@
 * Coupon-to-promotion catalog resolution.
 * Combined coupon and promotion eligibility explanation.
 
+== Milestone 8
+
+* Resolve coupon to linked promotion.
+* Apply promotion before redemption.
+* Record redemption only after successful application.
+* Preserve idempotent replay without duplicate redemption.
+
