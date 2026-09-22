@@ -81,3 +81,13 @@ services:
     App\Promoting\ServiceInterface\PromotionCampaignApplicationServiceInterface:
         alias: App\Promoting\Service\PromotionCampaignApplicationService
 
+    App\Promoting\Service\PromotionCheckoutPlanService:
+        arguments:
+            $selectionService: '@App\Promoting\ServiceInterface\PromotionSelectionServiceInterface'
+            $couponResolutionService: '@App\Promoting\ServiceInterface\PromotionCouponResolutionServiceInterface'
+            $resolutionService: '@App\Promoting\ServiceInterface\PromotionResolutionServiceInterface'
+            $benefitService: '@App\Promoting\ServiceInterface\PromotionBenefitServiceInterface'
+
+    App\Promoting\ServiceInterface\PromotionCheckoutPlanServiceInterface:
+        alias: App\Promoting\Service\PromotionCheckoutPlanService
+

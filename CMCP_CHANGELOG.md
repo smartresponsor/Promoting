@@ -115,3 +115,9 @@ Closed the remaining Canon040 test-debt warning without weakening domain invaria
 
 Final verification: PHPUnit 120 tests / 304 assertions green; PHPStan clean; PHP-CS-Fixer clean; Playwright/behavioral coverage green; Gating 68 rules with 0 failures and 0 warnings. Canon040 now passes at lines 100.0%, methods 80.0%, branches 94.7%; Canon031 remains green at 75.0% contract-method PHPDoc coverage.
 
+## 2026-09-22 Milestone 12
+
+Added a read-only checkout promotion plan that combines automatic promotions and an optional validated coupon promotion before one priority/stacking/exclusivity resolution. Typed benefits are emitted only for promotions actually reached and eligible in that resolution. Monetary and benefit requests must describe the same subtotal, currency, and evaluation time. Planning does not mutate coupon redemption, campaign, Cart, or Order state.
+
+Verification: PHPUnit 128 tests / 325 assertions green; PHPStan clean; PHP-CS-Fixer clean; Playwright/behavioral coverage green; Gating 68 rules with 0 failures and 0 warnings. Canon040 remains green at lines 99.7%, methods 80.0%, branches 94.5%; Canon031 is green at 75.4% contract-method PHPDoc coverage.
+

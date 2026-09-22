@@ -74,3 +74,11 @@
 * Preserve explicit audit reason when a coupon is required.
 * Allow coupon resolution to activate coupon-required promotions.
 
+== Milestone 12
+
+* Build a read-only checkout promotion plan.
+* Combine automatic and optional coupon promotions before stacking resolution.
+* Resolve monetary discounts under one priority/exclusivity policy.
+* Produce typed non-price benefits only for promotions reached by resolution.
+* Keep cart/order/campaign/redemption state immutable during planning.
+
