@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Promoting\Tests\Unit;
 
 use App\Promoting\DTO\PromotionEvaluationRequestDTO;
+use App\Promoting\Enum\PromotionActivationMode;
 use App\Promoting\Service\PromotionCouponResolutionService;
 use App\Promoting\Service\PromotionCouponService;
 use App\Promoting\Service\PromotionEvaluationService;
@@ -55,6 +56,7 @@ final class PromotionCouponResolutionServiceTest extends TestCase
             'Save',
             new PromotionRule(),
             PromotionAction::fixed(100),
+            activationMode: PromotionActivationMode::Coupon,
         );
 
         $result = $service->resolve(

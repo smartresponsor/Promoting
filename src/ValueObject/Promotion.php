@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Promoting\ValueObject;
 
+use App\Promoting\Enum\PromotionActivationMode;
 use App\Promoting\Enum\PromotionStackingMode;
 use App\Promoting\Enum\PromotionStatus;
 
@@ -21,6 +22,7 @@ final readonly class Promotion
         public ?PromotionBenefit $benefit = null,
         public ?\DateTimeImmutable $startsAt = null,
         public ?\DateTimeImmutable $endsAt = null,
+        public PromotionActivationMode $activationMode = PromotionActivationMode::Automatic,
     ) {
         if ('' === trim($id)) {
             throw new \InvalidArgumentException('Promotion id cannot be empty.');
@@ -47,6 +49,7 @@ final readonly class Promotion
             $this->benefit,
             $this->startsAt,
             $this->endsAt,
+            $this->activationMode,
         );
     }
 }

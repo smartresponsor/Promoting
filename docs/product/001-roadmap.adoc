@@ -67,3 +67,10 @@
 * Record discount amount as campaign spend only after successful application.
 * Reject zero-discount and budget-overflow applications without mutating campaign state.
 
+== Milestone 11
+
+* Distinguish automatic and coupon-required promotion activation.
+* Exclude coupon-required promotions from automatic catalog selection.
+* Preserve explicit audit reason when a coupon is required.
+* Allow coupon resolution to activate coupon-required promotions.
+

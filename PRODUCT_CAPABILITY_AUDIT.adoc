@@ -11,6 +11,7 @@ Promoting now has an executable commercial-incentive core. Pricing remains autho
 |===
 |Capability |Status |Audit
 |Promotion lifecycle |IMPLEMENTED |Immutable promotion definition with explicit active/inactive lifecycle.
+|Promotion activation mode |IMPLEMENTED |Promotions explicitly declare automatic or coupon-required activation; automatic selection excludes coupon-only promotions while coupon resolution can activate them.
 |Promotion catalog/selection |IMPLEMENTED |Immutable catalog enforces promotion-id uniqueness and selects eligible promotions deterministically while preserving every evaluation result.
 |Conditions/eligibility rules |IMPLEMENTED |Ordered deterministic minimum-subtotal and currency conditions with reason codes.
 |Actions/application methods |IMPLEMENTED |Fixed and basis-point percentage monetary actions plus typed non-price benefit evaluation.
@@ -42,4 +43,5 @@ Milestone 7: coupon-to-promotion catalog resolution implemented with combined el
 Milestone 8: end-to-end coupon application transaction implemented with post-application redemption and idempotent replay.
 Milestone 9: campaign-scoped catalog resolution and eligible promotion selection implemented.
 Milestone 10: campaign application with atomic budget spend accounting implemented.
+Milestone 11: automatic versus coupon-required activation semantics implemented and verified.
 

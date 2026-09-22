@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Promoting\Tests\Unit;
 
 use App\Promoting\DTO\PromotionEvaluationRequestDTO;
+use App\Promoting\Enum\PromotionActivationMode;
 use App\Promoting\Enum\PromotionStatus;
 use App\Promoting\Service\PromotionEvaluationService;
 use App\Promoting\Service\PromotionSelectionService;
@@ -63,6 +64,28 @@ final class PromotionSelectionServiceTest extends TestCase
         );
         self::assertCount(3, $result->evaluations);
         self::assertFalse($result->evaluations[0]->eligible);
+    }
+
+    public function testCouponRequiredPromotionIsNotSelectedAutomatically(): void
+    {
+        $service = new PromotionSelectionService(new PromotionEvaluationService());
+        $couponOnly = new Promotion(
+            'coupon-only',
+            'Coupon Only',
+            new PromotionRule(),
+            PromotionAction::fixed(100),
+            activationMode: PromotionActivationMode::Coupon,
+        );
+
+        $result = $service->select(
+            new PromotionCatalog([$couponOnly]),
+            new PromotionEvaluationRequestDTO(1000, 'USD'),
+        );
+
+        self::assertSame([], $result->promotions);
+        self::assertCount(1, $result->evaluations);
+        self::assertFalse($result->evaluations[0]->eligible);
+        self::assertSame(['promotion_coupon_required'], $result->evaluations[0]->reasons);
     }
 
     public function testSelectionRespectsPromotionWindowUsingExplicitTime(): void

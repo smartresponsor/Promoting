@@ -103,3 +103,9 @@ Added campaign application with atomic spend accounting. Campaign-scoped eligibl
 
 Verification: PHPUnit 39 tests / 146 assertions green; PHPStan clean; PHP-CS-Fixer clean; Playwright/behavioral coverage green; Gating 68 rules with 0 failures and one non-blocking Canon040 HIGH_TEST_DEBT warning. Semantic PHPDoc coverage is 75.0%. Fresh PHP coverage: lines 84.5%, methods 47.5%, branches 80.6%.
 
+## 2026-09-22 Milestone 11
+
+Added explicit promotion activation modes. Promotions default to automatic activation for backward compatibility; coupon-required promotions are excluded from ordinary catalog selection with the auditable reason `promotion_coupon_required`, while coupon resolution can still evaluate and activate them through a validated coupon code.
+
+Verification: PHPUnit 40 tests / 150 assertions green; PHPStan clean; PHP-CS-Fixer clean; Playwright/behavioral coverage green; Gating 68 rules with 0 failures and one non-blocking Canon040 HIGH_TEST_DEBT warning. Semantic PHPDoc coverage remains 75.0%; fresh PHP coverage remains lines 84.5%, methods 47.5%, branches 80.6%.
+
