@@ -104,6 +104,7 @@ services:
         arguments:
             $planService: '@App\Promoting\ServiceInterface\PromotionCheckoutPlanServiceInterface'
             $couponService: '@App\Promoting\ServiceInterface\PromotionCouponServiceInterface'
+            $campaignService: '@App\Promoting\ServiceInterface\PromotionCampaignServiceInterface'
 
     App\Promoting\ServiceInterface\PromotionCheckoutApplicationServiceInterface:
         alias: App\Promoting\Service\PromotionCheckoutApplicationService

@@ -8,6 +8,8 @@ use App\Promoting\DTO\PromotionBenefitRequestDTO;
 use App\Promoting\DTO\PromotionCheckoutApplicationResultDTO;
 use App\Promoting\DTO\PromotionCheckoutReversalResultDTO;
 use App\Promoting\DTO\PromotionEvaluationRequestDTO;
+use App\Promoting\ValueObject\PromotionCampaign;
+use App\Promoting\ValueObject\PromotionCampaignSpendLedger;
 use App\Promoting\ValueObject\PromotionCatalog;
 use App\Promoting\ValueObject\PromotionCouponBook;
 use App\Promoting\ValueObject\PromotionRedemptionLedger;
@@ -24,6 +26,8 @@ interface PromotionCheckoutApplicationServiceInterface
         ?string $couponCode = null,
         ?string $customerId = null,
         ?string $orderId = null,
+        ?PromotionCampaign $campaign = null,
+        ?PromotionCampaignSpendLedger $campaignSpendLedger = null,
     ): PromotionCheckoutApplicationResultDTO;
 
     /** Reverses one checkout coupon redemption idempotently without mutating Cart or Order state. */

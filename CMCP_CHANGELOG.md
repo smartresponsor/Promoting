@@ -153,3 +153,9 @@ Extended the existing read-only checkout planner with an optional explicit campa
 
 Verification: PHPUnit 157 tests / 437 assertions green; PHPStan clean; PHP-CS-Fixer clean; Playwright/behavioral coverage green; Symfony YAML/container lint green; Gating 69 rules with 0 failures and 0 warnings. Canon031 passes at 75.6% contract-method PHPDoc coverage. Canon040 passes at lines 99.8%, methods 80.4%, branches 94.0%. Active-campaign inclusion and inactive-campaign fallback are covered explicitly.
 
+## 2026-09-23 Milestone 18 acceptance
+
+Integrated campaign spend accounting into unified checkout application without transferring Cart or Order ownership. Checkout now derives campaign monetary spend from the final unified promotion resolution, records spend only for actually applied campaign discounts, preserves same-order idempotent replay, rejects aggregate/ledger drift and replay amount drift, releases prior spend before replanning a replay, and refuses budget overflow by replanning without campaign promotion effects. Non-monetary campaign benefits do not consume campaign budget.
+
+Verification: PHPUnit 167 tests / 477 assertions green; PHPStan clean; PHP-CS-Fixer clean; behavioral/UI evidence refreshed; Gating 70 rules with 0 failures and 0 warnings. Canon040 remains green at lines 99.5%, methods 80.0%, branches 94.0%. Canon052/053 integration passes on the current packaged Gating contract.
+

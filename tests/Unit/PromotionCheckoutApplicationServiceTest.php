@@ -9,6 +9,7 @@ use App\Promoting\DTO\PromotionCouponRedemptionResultDTO;
 use App\Promoting\DTO\PromotionCouponValidationDTO;
 use App\Promoting\DTO\PromotionEvaluationRequestDTO;
 use App\Promoting\Enum\PromotionActivationMode;
+use App\Promoting\Enum\PromotionCampaignStatus;
 use App\Promoting\Enum\PromotionStackingMode;
 use App\Promoting\Service\PromotionApplicationService;
 use App\Promoting\Service\PromotionBenefitService;
@@ -24,6 +25,10 @@ use App\Promoting\Service\PromotionSelectionService;
 use App\Promoting\ServiceInterface\PromotionCouponServiceInterface;
 use App\Promoting\ValueObject\Promotion;
 use App\Promoting\ValueObject\PromotionAction;
+use App\Promoting\ValueObject\PromotionBenefit;
+use App\Promoting\ValueObject\PromotionCampaign;
+use App\Promoting\ValueObject\PromotionCampaignSpend;
+use App\Promoting\ValueObject\PromotionCampaignSpendLedger;
 use App\Promoting\ValueObject\PromotionCatalog;
 use App\Promoting\ValueObject\PromotionCoupon;
 use App\Promoting\ValueObject\PromotionCouponBook;
@@ -50,7 +55,7 @@ final class PromotionCheckoutApplicationServiceTest extends TestCase
             new PromotionBenefitService($evaluation),
         );
 
-        return new PromotionCheckoutApplicationService($plan, $coupon);
+        return new PromotionCheckoutApplicationService($plan, $coupon, $campaign);
     }
 
     private function request(): PromotionEvaluationRequestDTO
@@ -232,6 +237,344 @@ final class PromotionCheckoutApplicationServiceTest extends TestCase
         self::assertSame(100, $result->plan->resolution->totalDiscountAmountMinor);
     }
 
+    public function testCampaignSpendIsRecordedFromUnifiedCheckoutResolution(): void
+    {
+        $campaignPromotion = new Promotion(
+            'campaign-promo',
+            'Campaign Promo',
+            new PromotionRule(),
+            PromotionAction::fixed(200),
+            activationMode: PromotionActivationMode::Campaign,
+        );
+        $campaign = new PromotionCampaign(
+            'campaign',
+            'Campaign',
+            ['campaign-promo'],
+            budgetMinor: 1000,
+            status: PromotionCampaignStatus::Active,
+        );
+        $campaignLedger = new PromotionCampaignSpendLedger();
+
+        $result = $this->service()->apply(
+            new PromotionCatalog([$campaignPromotion]),
+            new PromotionCouponBook(),
+            new PromotionRedemptionLedger(),
+            $this->request(),
+            $this->benefitRequest(),
+            orderId: 'order-1',
+            campaign: $campaign,
+            campaignSpendLedger: $campaignLedger,
+        );
+
+        self::assertNotNull($result->campaign);
+        self::assertSame(200, $result->campaign->spentMinor);
+        self::assertNotNull($result->campaignSpendLedger);
+        self::assertSame(200, $result->campaignSpendLedger->activeSpendForCampaign('campaign'));
+        self::assertNotNull($result->campaignSpend);
+        self::assertSame(200, $result->campaignSpend->amountMinor);
+        self::assertContains('checkout_campaign_spend_recorded', $result->reasons);
+    }
+
+    public function testCampaignSpendReplayIsIdempotent(): void
+    {
+        $campaignPromotion = new Promotion(
+            'campaign-promo',
+            'Campaign Promo',
+            new PromotionRule(),
+            PromotionAction::fixed(200),
+            activationMode: PromotionActivationMode::Campaign,
+        );
+        $catalog = new PromotionCatalog([$campaignPromotion]);
+        $campaign = new PromotionCampaign(
+            'campaign',
+            'Campaign',
+            ['campaign-promo'],
+            budgetMinor: 1000,
+            status: PromotionCampaignStatus::Active,
+        );
+
+        $first = $this->service()->apply(
+            $catalog,
+            new PromotionCouponBook(),
+            new PromotionRedemptionLedger(),
+            $this->request(),
+            $this->benefitRequest(),
+            orderId: 'order-1',
+            campaign: $campaign,
+            campaignSpendLedger: new PromotionCampaignSpendLedger(),
+        );
+        self::assertNotNull($first->campaign);
+        self::assertNotNull($first->campaignSpendLedger);
+
+        $replay = $this->service()->apply(
+            $catalog,
+            new PromotionCouponBook(),
+            new PromotionRedemptionLedger(),
+            $this->request(),
+            $this->benefitRequest(),
+            orderId: 'order-1',
+            campaign: $first->campaign,
+            campaignSpendLedger: $first->campaignSpendLedger,
+        );
+
+        self::assertSame($first->campaign, $replay->campaign);
+        self::assertSame($first->campaignSpendLedger, $replay->campaignSpendLedger);
+        self::assertNotNull($replay->campaignSpend);
+        self::assertSame(200, $replay->campaignSpend->amountMinor);
+        self::assertContains('campaign_spend_idempotent_replay', $replay->reasons);
+    }
+
+    public function testExclusiveCouponCanDisplaceCampaignWithoutConsumingCampaignBudget(): void
+    {
+        $couponPromotion = new Promotion(
+            'coupon',
+            'Coupon',
+            new PromotionRule(),
+            PromotionAction::fixed(300),
+            priority: 100,
+            stackingMode: PromotionStackingMode::Exclusive,
+            activationMode: PromotionActivationMode::Coupon,
+        );
+        $campaignPromotion = new Promotion(
+            'campaign-promo',
+            'Campaign Promo',
+            new PromotionRule(),
+            PromotionAction::fixed(200),
+            priority: 10,
+            activationMode: PromotionActivationMode::Campaign,
+        );
+        $coupon = new PromotionCoupon('SAVE', 'coupon');
+        $campaign = new PromotionCampaign(
+            'campaign',
+            'Campaign',
+            ['campaign-promo'],
+            budgetMinor: 1000,
+            status: PromotionCampaignStatus::Active,
+        );
+        $campaignLedger = new PromotionCampaignSpendLedger();
+
+        $result = $this->service()->apply(
+            new PromotionCatalog([$couponPromotion, $campaignPromotion]),
+            new PromotionCouponBook([$coupon]),
+            new PromotionRedemptionLedger(),
+            $this->request(),
+            $this->benefitRequest(),
+            'SAVE',
+            'customer',
+            'order-1',
+            $campaign,
+            $campaignLedger,
+        );
+
+        self::assertNotNull($result->couponRedemption);
+        self::assertTrue($result->couponRedemption->redeemed);
+        self::assertSame(300, $result->plan->resolution->totalDiscountAmountMinor);
+        self::assertNotNull($result->campaign);
+        self::assertSame(0, $result->campaign->spentMinor);
+        self::assertSame($campaignLedger, $result->campaignSpendLedger);
+        self::assertNull($result->campaignSpend);
+        self::assertContains('checkout_campaign_no_monetary_spend', $result->reasons);
+    }
+
+    public function testCampaignBudgetOverflowReplansWithoutCampaignPromotion(): void
+    {
+        $automatic = new Promotion(
+            'automatic',
+            'Automatic',
+            new PromotionRule(),
+            PromotionAction::fixed(100),
+        );
+        $campaignPromotion = new Promotion(
+            'campaign-promo',
+            'Campaign Promo',
+            new PromotionRule(),
+            PromotionAction::fixed(200),
+            priority: 100,
+            activationMode: PromotionActivationMode::Campaign,
+        );
+        $campaign = new PromotionCampaign(
+            'campaign',
+            'Campaign',
+            ['campaign-promo'],
+            budgetMinor: 1000,
+            spentMinor: 900,
+            status: PromotionCampaignStatus::Active,
+        );
+        $campaignLedger = new PromotionCampaignSpendLedger([
+            new PromotionCampaignSpend('campaign', 'order-existing', 900),
+        ]);
+
+        $result = $this->service()->apply(
+            new PromotionCatalog([$automatic, $campaignPromotion]),
+            new PromotionCouponBook(),
+            new PromotionRedemptionLedger(),
+            $this->request(),
+            $this->benefitRequest(),
+            orderId: 'order-1',
+            campaign: $campaign,
+            campaignSpendLedger: $campaignLedger,
+        );
+
+        self::assertSame(100, $result->plan->resolution->totalDiscountAmountMinor);
+        self::assertNotNull($result->plan->campaignSelection);
+        self::assertContains('checkout_campaign_budget_would_exceed', $result->plan->reasons);
+        self::assertSame($campaign, $result->campaign);
+        self::assertSame($campaignLedger, $result->campaignSpendLedger);
+        self::assertNull($result->campaignSpend);
+        self::assertContains('checkout_campaign_spend_not_recorded_budget', $result->reasons);
+    }
+
+    public function testCampaignContextRequiresSpendLedger(): void
+    {
+        $campaign = new PromotionCampaign(
+            'campaign',
+            'Campaign',
+            ['campaign-promo'],
+            status: PromotionCampaignStatus::Active,
+        );
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->service()->apply(
+            new PromotionCatalog(),
+            new PromotionCouponBook(),
+            new PromotionRedemptionLedger(),
+            $this->request(),
+            $this->benefitRequest(),
+            orderId: 'order-1',
+            campaign: $campaign,
+        );
+    }
+
+    public function testCampaignContextRequiresOrderIdentity(): void
+    {
+        $campaign = new PromotionCampaign(
+            'campaign',
+            'Campaign',
+            ['campaign-promo'],
+            status: PromotionCampaignStatus::Active,
+        );
+
+        $this->expectException(\InvalidArgumentException::class);
+        $this->service()->apply(
+            new PromotionCatalog(),
+            new PromotionCouponBook(),
+            new PromotionRedemptionLedger(),
+            $this->request(),
+            $this->benefitRequest(),
+            campaign: $campaign,
+            campaignSpendLedger: new PromotionCampaignSpendLedger(),
+        );
+    }
+
+    public function testCampaignSpendLedgerWithoutCampaignIsRejected(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->service()->apply(
+            new PromotionCatalog(),
+            new PromotionCouponBook(),
+            new PromotionRedemptionLedger(),
+            $this->request(),
+            $this->benefitRequest(),
+            campaignSpendLedger: new PromotionCampaignSpendLedger(),
+        );
+    }
+
+    public function testCampaignAggregateAndLedgerDriftIsRejected(): void
+    {
+        $campaign = new PromotionCampaign(
+            'campaign',
+            'Campaign',
+            ['campaign-promo'],
+            budgetMinor: 1000,
+            spentMinor: 100,
+            status: PromotionCampaignStatus::Active,
+        );
+
+        $this->expectException(\DomainException::class);
+        $this->service()->apply(
+            new PromotionCatalog(),
+            new PromotionCouponBook(),
+            new PromotionRedemptionLedger(),
+            $this->request(),
+            $this->benefitRequest(),
+            orderId: 'order-1',
+            campaign: $campaign,
+            campaignSpendLedger: new PromotionCampaignSpendLedger(),
+        );
+    }
+
+    public function testCampaignReplayAmountDriftIsRejected(): void
+    {
+        $campaign = new PromotionCampaign(
+            'campaign',
+            'Campaign',
+            ['campaign-promo'],
+            budgetMinor: 1000,
+            spentMinor: 200,
+            status: PromotionCampaignStatus::Active,
+        );
+        $ledger = new PromotionCampaignSpendLedger([
+            new PromotionCampaignSpend('campaign', 'order-1', 200),
+        ]);
+        $changedPromotion = new Promotion(
+            'campaign-promo',
+            'Campaign Promo',
+            new PromotionRule(),
+            PromotionAction::fixed(300),
+            activationMode: PromotionActivationMode::Campaign,
+        );
+
+        $this->expectException(\DomainException::class);
+        $this->service()->apply(
+            new PromotionCatalog([$changedPromotion]),
+            new PromotionCouponBook(),
+            new PromotionRedemptionLedger(),
+            $this->request(),
+            $this->benefitRequest(),
+            orderId: 'order-1',
+            campaign: $campaign,
+            campaignSpendLedger: $ledger,
+        );
+    }
+
+    public function testCampaignBenefitWithoutDiscountDoesNotCreateSpend(): void
+    {
+        $campaignPromotion = new Promotion(
+            'campaign-gift',
+            'Campaign Gift',
+            new PromotionRule(),
+            PromotionAction::fixed(0),
+            benefit: PromotionBenefit::freeGift('GIFT'),
+            activationMode: PromotionActivationMode::Campaign,
+        );
+        $campaign = new PromotionCampaign(
+            'campaign',
+            'Campaign',
+            ['campaign-gift'],
+            budgetMinor: 1000,
+            status: PromotionCampaignStatus::Active,
+        );
+        $ledger = new PromotionCampaignSpendLedger();
+
+        $result = $this->service()->apply(
+            new PromotionCatalog([$campaignPromotion]),
+            new PromotionCouponBook(),
+            new PromotionRedemptionLedger(),
+            $this->request(),
+            $this->benefitRequest(),
+            orderId: 'order-1',
+            campaign: $campaign,
+            campaignSpendLedger: $ledger,
+        );
+
+        self::assertCount(1, $result->plan->benefits);
+        self::assertSame('GIFT', $result->plan->benefits[0]->rewardSku);
+        self::assertSame($campaign, $result->campaign);
+        self::assertSame($ledger, $result->campaignSpendLedger);
+        self::assertNull($result->campaignSpend);
+        self::assertContains('checkout_campaign_no_monetary_spend', $result->reasons);
+    }
+
     public function testCheckoutCouponReversalReleasesRedemption(): void
     {
         $coupon = new PromotionCoupon('SAVE', 'coupon');
@@ -398,7 +741,7 @@ final class PromotionCheckoutApplicationServiceTest extends TestCase
                 return new PromotionCouponRedemptionResultDTO(false, $ledger, null, ['synthetic_reverse']);
             }
         };
-        $service = new PromotionCheckoutApplicationService($plan, $failingCouponService);
+        $service = new PromotionCheckoutApplicationService($plan, $failingCouponService, $campaign);
         $couponPromotion = new Promotion(
             'coupon',
             'Coupon',
