@@ -25,6 +25,7 @@ use App\Promoting\ValueObject\PromotionAction;
 use App\Promoting\ValueObject\PromotionCatalog;
 use App\Promoting\ValueObject\PromotionCoupon;
 use App\Promoting\ValueObject\PromotionCouponBook;
+use App\Promoting\ValueObject\PromotionRedemption;
 use App\Promoting\ValueObject\PromotionRedemptionLedger;
 use App\Promoting\ValueObject\PromotionRule;
 use PHPUnit\Framework\TestCase;
@@ -224,6 +225,108 @@ final class PromotionCheckoutApplicationServiceTest extends TestCase
         self::assertNull($result->couponRedemption);
         self::assertSame(['checkout_application_completed_without_coupon'], $result->reasons);
         self::assertSame(100, $result->plan->resolution->totalDiscountAmountMinor);
+    }
+
+    public function testCheckoutCouponReversalReleasesRedemption(): void
+    {
+        $coupon = new PromotionCoupon('SAVE', 'coupon');
+        $ledger = new PromotionRedemptionLedger([
+            new PromotionRedemption('SAVE', 'customer', 'order-1'),
+        ]);
+
+        $result = $this->service()->reverseCoupon(
+            new PromotionCouponBook([$coupon]),
+            $ledger,
+            'save',
+            'customer',
+            'order-1',
+        );
+
+        self::assertNotNull($result->couponReversal);
+        self::assertTrue($result->couponReversal->redeemed);
+        self::assertSame(0, $result->ledger->redeemedCount('SAVE'));
+        self::assertSame(
+            ['coupon_redemption_reversed', 'checkout_coupon_reversal_completed'],
+            $result->reasons,
+        );
+    }
+
+    public function testCheckoutCouponReversalReplayIsIdempotentNoop(): void
+    {
+        $coupon = new PromotionCoupon('SAVE', 'coupon');
+        $ledger = new PromotionRedemptionLedger();
+
+        $result = $this->service()->reverseCoupon(
+            new PromotionCouponBook([$coupon]),
+            $ledger,
+            'SAVE',
+            'customer',
+            'order-1',
+        );
+
+        self::assertSame($ledger, $result->ledger);
+        self::assertNotNull($result->couponReversal);
+        self::assertFalse($result->couponReversal->redeemed);
+        self::assertSame(
+            ['coupon_reversal_idempotent_noop', 'checkout_coupon_reversal_idempotent_noop'],
+            $result->reasons,
+        );
+    }
+
+    public function testCheckoutCouponReversalMissingCouponLeavesLedgerUnchanged(): void
+    {
+        $ledger = new PromotionRedemptionLedger();
+
+        $result = $this->service()->reverseCoupon(
+            new PromotionCouponBook(),
+            $ledger,
+            'MISSING',
+            'customer',
+            'order-1',
+        );
+
+        self::assertSame($ledger, $result->ledger);
+        self::assertNull($result->couponReversal);
+        self::assertSame(['checkout_coupon_reversal_coupon_not_found'], $result->reasons);
+    }
+
+    public function testCheckoutCouponReversalRejectsBlankCouponCode(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        $this->service()->reverseCoupon(
+            new PromotionCouponBook(),
+            new PromotionRedemptionLedger(),
+            '   ',
+            'customer',
+            'order-1',
+        );
+    }
+
+    public function testCheckoutCouponReversalRejectsBlankCustomerId(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        $this->service()->reverseCoupon(
+            new PromotionCouponBook(),
+            new PromotionRedemptionLedger(),
+            'SAVE',
+            '   ',
+            'order-1',
+        );
+    }
+
+    public function testCheckoutCouponReversalRejectsBlankOrderId(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+
+        $this->service()->reverseCoupon(
+            new PromotionCouponBook(),
+            new PromotionRedemptionLedger(),
+            'SAVE',
+            'customer',
+            '   ',
+        );
     }
 
     public function testCouponCodeRequiresCustomerIdentity(): void

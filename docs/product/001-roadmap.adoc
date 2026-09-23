@@ -89,3 +89,10 @@
 * Preserve idempotent same-order replay at usage limits.
 * Leave promotion-owned ledger state unchanged when a coupon is invalid or displaced by exclusivity.
 
+== Milestone 14
+
+* Reverse checkout coupon redemption by coupon/customer/order identity.
+* Preserve idempotent reversal no-op semantics.
+* Leave Cart and Order state outside Promoting ownership.
+* Surface missing-coupon reversal as an auditable no-op result.
+

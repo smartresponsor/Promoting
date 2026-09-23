@@ -6,6 +6,7 @@ namespace App\Promoting\Service;
 
 use App\Promoting\DTO\PromotionBenefitRequestDTO;
 use App\Promoting\DTO\PromotionCheckoutApplicationResultDTO;
+use App\Promoting\DTO\PromotionCheckoutReversalResultDTO;
 use App\Promoting\DTO\PromotionEvaluationRequestDTO;
 use App\Promoting\ServiceInterface\PromotionCheckoutApplicationServiceInterface;
 use App\Promoting\ServiceInterface\PromotionCheckoutPlanServiceInterface;
@@ -117,6 +118,43 @@ final readonly class PromotionCheckoutApplicationService implements PromotionChe
             $redemption->redeemed
                 ? [...$redemption->reasons, 'checkout_coupon_redeemed']
                 : [...$redemption->reasons, 'checkout_coupon_redemption_failed'],
+        );
+    }
+
+    public function reverseCoupon(
+        PromotionCouponBook $couponBook,
+        PromotionRedemptionLedger $ledger,
+        string $couponCode,
+        string $customerId,
+        string $orderId,
+    ): PromotionCheckoutReversalResultDTO {
+        if ('' === trim($couponCode)) {
+            throw new \InvalidArgumentException('Coupon code cannot be empty.');
+        }
+        if ('' === trim($customerId)) {
+            throw new \InvalidArgumentException('Customer id cannot be empty.');
+        }
+        if ('' === trim($orderId)) {
+            throw new \InvalidArgumentException('Order id cannot be empty.');
+        }
+
+        $coupon = $couponBook->find($couponCode);
+        if (null === $coupon) {
+            return new PromotionCheckoutReversalResultDTO(
+                $ledger,
+                null,
+                ['checkout_coupon_reversal_coupon_not_found'],
+            );
+        }
+
+        $reversal = $this->couponService->reverse($coupon, $ledger, $customerId, $orderId);
+
+        return new PromotionCheckoutReversalResultDTO(
+            $reversal->ledger,
+            $reversal,
+            $reversal->redeemed
+                ? [...$reversal->reasons, 'checkout_coupon_reversal_completed']
+                : [...$reversal->reasons, 'checkout_coupon_reversal_idempotent_noop'],
         );
     }
 }

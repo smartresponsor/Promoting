@@ -127,3 +127,11 @@ Added unified checkout promotion application over promotion-owned state. Coupon 
 
 Verification: PHPUnit 138 tests / 355 assertions green; PHPStan clean; PHP-CS-Fixer clean; Playwright/behavioral coverage green; Gating 68 rules with 0 failures and 0 warnings. Canon040 passes at lines 99.7%, methods 80.7%, branches 94.7%; Canon031 remains green above threshold.
 
+## 2026-09-23 Milestone 14
+
+Added checkout coupon reversal over promotion-owned immutable ledger state. Reversal is addressed by coupon/customer/order identity, is idempotent when the redemption is already absent or reversed, preserves missing-coupon outcomes as auditable no-op results, and does not mutate Cart or Order state.
+
+Verification: PHPUnit 144 tests / 369 assertions green; PHPStan clean; fresh Xdebug coverage remains above canonical thresholds at lines 99.8%, methods 80.0%, branches 94.4%. Composer strict/check-lock remains valid on the canonical symlink dependency topology.
+
+Canonical enforcement note: local Canonization Canon053 explicitly permits symlinked sibling repositories for Gating, Cruding, Viewing, Interfacing, Collectioning, Objecting, Tabling, Runtime, and Indexing. The current Gating mirror has a stale four-item exception list and therefore falsely rejects Promoting's canonical Collectioning/Objecting/Tabling symlinks. An experimental VCS migration was fully reverted after proving that local VCS would allow Composer to attempt checkout operations in dirty sibling working repositories. Promoting retains the normative Canonization topology; the remaining aggregate gate failure is external mirror drift, not a target repository violation.
+

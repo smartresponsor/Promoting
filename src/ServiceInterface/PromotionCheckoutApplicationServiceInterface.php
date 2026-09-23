@@ -6,6 +6,7 @@ namespace App\Promoting\ServiceInterface;
 
 use App\Promoting\DTO\PromotionBenefitRequestDTO;
 use App\Promoting\DTO\PromotionCheckoutApplicationResultDTO;
+use App\Promoting\DTO\PromotionCheckoutReversalResultDTO;
 use App\Promoting\DTO\PromotionEvaluationRequestDTO;
 use App\Promoting\ValueObject\PromotionCatalog;
 use App\Promoting\ValueObject\PromotionCouponBook;
@@ -24,4 +25,13 @@ interface PromotionCheckoutApplicationServiceInterface
         ?string $customerId = null,
         ?string $orderId = null,
     ): PromotionCheckoutApplicationResultDTO;
+
+    /** Reverses one checkout coupon redemption idempotently without mutating Cart or Order state. */
+    public function reverseCoupon(
+        PromotionCouponBook $couponBook,
+        PromotionRedemptionLedger $ledger,
+        string $couponCode,
+        string $customerId,
+        string $orderId,
+    ): PromotionCheckoutReversalResultDTO;
 }

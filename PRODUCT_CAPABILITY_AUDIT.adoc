@@ -29,7 +29,7 @@ Promoting now has an executable commercial-incentive core. Pricing remains autho
 |Campaign application/spend |IMPLEMENTED |Campaign-scoped promotions resolve and apply through stacking rules; discount spend is recorded atomically only when remaining budget permits it.
 |Buy-X-Get-Y/free gift |IMPLEMENTED |Typed entitlement facts preserve qualifying/reward SKU and quantity semantics.
 |Free shipping incentive |IMPLEMENTED |Promoting emits free-shipping eligibility only; Shipping retains shipment execution ownership.
-|Redemption ledger/reversal |PARTIAL |Immutable idempotent redeem/reverse semantics are implemented; durable concurrent persistence remains an integration concern.
+|Redemption ledger/reversal |PARTIAL |Immutable idempotent redeem/reverse semantics are implemented through coupon and checkout transaction layers, including cancellation/refund-style reversal; durable concurrent persistence remains an integration concern.
 |Evaluation explanation |IMPLEMENTED |Eligibility, application, coupon, campaign, and benefit paths expose stable reason codes.
 |===
 
@@ -48,4 +48,5 @@ Milestone 10: campaign application with atomic budget spend accounting implement
 Milestone 11: automatic versus coupon-required activation semantics implemented and verified.
 Milestone 12: read-only checkout promotion planning implemented across automatic, coupon, stacking, and typed-benefit semantics.
 Milestone 13: unified checkout application implemented with participation-gated coupon redemption and idempotent replay.
+Milestone 14: checkout coupon reversal implemented with idempotent no-op semantics and promotion-owned ledger isolation.
 
