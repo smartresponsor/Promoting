@@ -67,7 +67,7 @@ final readonly class PromotionCampaignSelectionService implements PromotionCampa
             );
         }
 
-        $selection = $this->selectionService->select(new PromotionCatalog($members), $request);
+        $selection = $this->selectionService->selectForCampaign(new PromotionCatalog($members), $request);
 
         return new PromotionCampaignSelectionResultDTO(
             true,

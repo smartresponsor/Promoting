@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Promoting\Tests\Unit;
 
 use App\Promoting\DTO\PromotionEvaluationRequestDTO;
+use App\Promoting\Enum\PromotionActivationMode;
 use App\Promoting\Enum\PromotionCampaignStatus;
 use App\Promoting\Enum\PromotionStatus;
 use App\Promoting\Service\PromotionCampaignSelectionService;
@@ -117,6 +118,57 @@ final class PromotionCampaignSelectionServiceTest extends TestCase
         self::assertCount(3, $result->evaluations);
         self::assertContains('campaign_promotion_missing:missing', $result->reasons);
         self::assertContains('campaign_promotions_selected', $result->reasons);
+    }
+
+    public function testCampaignContextSelectsCampaignOnlyPromotionButStillRejectsCouponOnlyPromotion(): void
+    {
+        $campaignOnly = new Promotion(
+            'campaign-only',
+            'Campaign Only',
+            new PromotionRule(),
+            PromotionAction::fixed(100),
+            priority: 20,
+            activationMode: PromotionActivationMode::Campaign,
+        );
+        $automatic = new Promotion(
+            'automatic',
+            'Automatic',
+            new PromotionRule(),
+            PromotionAction::fixed(100),
+            priority: 10,
+        );
+        $couponOnly = new Promotion(
+            'coupon-only',
+            'Coupon Only',
+            new PromotionRule(),
+            PromotionAction::fixed(100),
+            priority: 30,
+            activationMode: PromotionActivationMode::Coupon,
+        );
+        $campaign = new PromotionCampaign(
+            'campaign',
+            'Campaign',
+            ['coupon-only', 'automatic', 'campaign-only'],
+            status: PromotionCampaignStatus::Active,
+        );
+
+        $result = $this->service()->select(
+            $campaign,
+            new PromotionCatalog([$couponOnly, $automatic, $campaignOnly]),
+            new PromotionEvaluationRequestDTO(
+                1000,
+                'USD',
+                new \DateTimeImmutable('2026-09-22T12:00:00+00:00'),
+            ),
+        );
+
+        self::assertTrue($result->available);
+        self::assertSame(
+            ['campaign-only', 'automatic'],
+            array_map(static fn (Promotion $promotion): string => $promotion->id, $result->promotions),
+        );
+        self::assertCount(3, $result->evaluations);
+        self::assertSame(['promotion_coupon_required'], $result->evaluations[0]->reasons);
     }
 
     public function testAvailableCampaignWithOnlyMissingMembersReturnsEmptySelection(): void

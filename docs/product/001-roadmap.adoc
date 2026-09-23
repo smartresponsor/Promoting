@@ -104,3 +104,10 @@
 * Reverse campaign spend atomically for cancellation/refund flows.
 * Reject aggregate/ledger drift instead of silently repairing it.
 
+== Milestone 16
+
+* Add explicit campaign-only promotion activation.
+* Exclude campaign-only promotions from ordinary automatic checkout selection.
+* Allow automatic and campaign-only promotions inside campaign context.
+* Keep coupon-only promotions isolated from campaign selection.
+

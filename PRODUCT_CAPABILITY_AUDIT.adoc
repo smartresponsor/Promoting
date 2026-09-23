@@ -11,7 +11,7 @@ Promoting now has an executable commercial-incentive core. Pricing remains autho
 |===
 |Capability |Status |Audit
 |Promotion lifecycle |IMPLEMENTED |Immutable promotion definition with explicit active/inactive lifecycle.
-|Promotion activation mode |IMPLEMENTED |Promotions explicitly declare automatic or coupon-required activation; automatic selection excludes coupon-only promotions while coupon resolution can activate them.
+|Promotion activation mode |IMPLEMENTED |Promotions explicitly declare automatic, coupon-required, or campaign-only activation; ordinary selection excludes coupon/campaign-only promotions, coupon resolution activates coupon-only promotions, and campaign selection activates automatic plus campaign-only promotions.
 |Promotion catalog/selection |IMPLEMENTED |Immutable catalog enforces promotion-id uniqueness and selects eligible promotions deterministically while preserving every evaluation result.
 |Checkout promotion planning |IMPLEMENTED |Read-only planning combines automatic and optional coupon promotions before one priority/stacking resolution, then emits typed benefits only for promotions reached by that resolver.
 |Checkout promotion application |IMPLEMENTED |Unified checkout planning can be applied to promotion-owned redemption state; a coupon is redeemed only when its linked promotion actually participates, with same-order idempotent replay.
@@ -50,4 +50,5 @@ Milestone 12: read-only checkout promotion planning implemented across automatic
 Milestone 13: unified checkout application implemented with participation-gated coupon redemption and idempotent replay.
 Milestone 14: checkout coupon reversal implemented with idempotent no-op semantics and promotion-owned ledger isolation.
 Milestone 15: campaign per-order spend ledger, idempotent replay, synchronization guard, and atomic spend reversal implemented.
+Milestone 16: explicit campaign-only activation implemented so campaign promotions cannot leak into ordinary automatic checkout selection.
 

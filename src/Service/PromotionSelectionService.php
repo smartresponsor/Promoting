@@ -20,19 +20,51 @@ final readonly class PromotionSelectionService implements PromotionSelectionServ
     {
     }
 
+    /** Selects only promotions that are eligible for ordinary automatic activation. */
     public function select(
         PromotionCatalog $catalog,
         PromotionEvaluationRequestDTO $request,
+    ): PromotionSelectionResultDTO {
+        return $this->selectWithActivationModes(
+            $catalog,
+            $request,
+            [PromotionActivationMode::Automatic],
+        );
+    }
+
+    /** Selects promotions that may execute inside an active campaign context. */
+    public function selectForCampaign(
+        PromotionCatalog $catalog,
+        PromotionEvaluationRequestDTO $request,
+    ): PromotionSelectionResultDTO {
+        return $this->selectWithActivationModes(
+            $catalog,
+            $request,
+            [PromotionActivationMode::Automatic, PromotionActivationMode::Campaign],
+        );
+    }
+
+    /**
+     * @param list<PromotionActivationMode> $allowedModes
+     */
+    private function selectWithActivationModes(
+        PromotionCatalog $catalog,
+        PromotionEvaluationRequestDTO $request,
+        array $allowedModes,
     ): PromotionSelectionResultDTO {
         $promotions = [];
         $evaluations = [];
 
         foreach ($catalog->promotions as $promotion) {
-            if (PromotionActivationMode::Coupon === $promotion->activationMode) {
+            if (!in_array($promotion->activationMode, $allowedModes, true)) {
                 $evaluations[] = new PromotionEvaluationDTO(
                     $promotion->id,
                     false,
-                    ['promotion_coupon_required'],
+                    match ($promotion->activationMode) {
+                        PromotionActivationMode::Coupon => ['promotion_coupon_required'],
+                        PromotionActivationMode::Campaign => ['promotion_campaign_required'],
+                        PromotionActivationMode::Automatic => ['promotion_activation_context_mismatch'],
+                    },
                 );
                 continue;
             }

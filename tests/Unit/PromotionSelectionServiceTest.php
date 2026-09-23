@@ -88,6 +88,28 @@ final class PromotionSelectionServiceTest extends TestCase
         self::assertSame(['promotion_coupon_required'], $result->evaluations[0]->reasons);
     }
 
+    public function testCampaignOnlyPromotionIsNotSelectedAutomatically(): void
+    {
+        $service = new PromotionSelectionService(new PromotionEvaluationService());
+        $campaignOnly = new Promotion(
+            'campaign-only',
+            'Campaign Only',
+            new PromotionRule(),
+            PromotionAction::fixed(100),
+            activationMode: PromotionActivationMode::Campaign,
+        );
+
+        $result = $service->select(
+            new PromotionCatalog([$campaignOnly]),
+            new PromotionEvaluationRequestDTO(1000, 'USD'),
+        );
+
+        self::assertSame([], $result->promotions);
+        self::assertCount(1, $result->evaluations);
+        self::assertFalse($result->evaluations[0]->eligible);
+        self::assertSame(['promotion_campaign_required'], $result->evaluations[0]->reasons);
+    }
+
     public function testSelectionRespectsPromotionWindowUsingExplicitTime(): void
     {
         $service = new PromotionSelectionService(new PromotionEvaluationService());

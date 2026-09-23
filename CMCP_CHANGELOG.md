@@ -141,3 +141,9 @@ Added per-order campaign spend transactions over immutable promotion-owned state
 
 Verification: PHPUnit 153 tests / 415 assertions green; PHPStan clean; PHP-CS-Fixer clean; Playwright/behavioral coverage green; Composer strict/check-lock and PHP lint green; Symfony boot, YAML lint, and container lint green. Gating 69 rules with 0 failures and 0 warnings. Canon031 passes at 73.7% contract-method PHPDoc coverage. Canon040 passes at lines 99.8%, methods 81.0%, branches 94.6%.
 
+## 2026-09-23 Milestone 16
+
+Added explicit campaign-only promotion activation. Ordinary automatic selection now excludes both coupon-required and campaign-only promotions with stable reason codes; campaign selection explicitly admits automatic plus campaign-only promotions while continuing to reject coupon-only promotions. This prevents campaign-scoped incentives from leaking into ordinary checkout planning when all promotion definitions share one catalog.
+
+Verification before final aggregate quality: PHPUnit 155 tests / 423 assertions green; PHPStan clean; fresh Xdebug coverage lines 99.8%, methods 80.4%, branches 94.0%. No new persistence, Cart/Order mutation, or sibling repository changes were introduced.
+
