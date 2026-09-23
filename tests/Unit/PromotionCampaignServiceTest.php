@@ -51,6 +51,29 @@ final class PromotionCampaignServiceTest extends TestCase
         $service->activate($campaign, new \DateTimeImmutable('2026-09-20T12:00:00+00:00'));
     }
 
+    public function testReleaseSpendRejectsNegativeAmountAndUnderflow(): void
+    {
+        $service = new PromotionCampaignService();
+        $campaign = new PromotionCampaign(
+            'budget',
+            'Budget',
+            ['promo-1'],
+            budgetMinor: 500,
+            spentMinor: 100,
+            status: PromotionCampaignStatus::Active,
+        );
+
+        try {
+            $service->releaseSpend($campaign, -1);
+            self::fail('Negative release must fail.');
+        } catch (\InvalidArgumentException $exception) {
+            self::assertSame('Campaign spend release cannot be negative.', $exception->getMessage());
+        }
+
+        $this->expectException(\DomainException::class);
+        $service->releaseSpend($campaign, 101);
+    }
+
     public function testSpendCannotExceedBudgetAndExhaustionMakesCampaignUnavailable(): void
     {
         $service = new PromotionCampaignService();

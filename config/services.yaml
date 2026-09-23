@@ -81,6 +81,14 @@ services:
     App\Promoting\ServiceInterface\PromotionCampaignApplicationServiceInterface:
         alias: App\Promoting\Service\PromotionCampaignApplicationService
 
+    App\Promoting\Service\PromotionCampaignTransactionService:
+        arguments:
+            $applicationService: '@App\Promoting\ServiceInterface\PromotionCampaignApplicationServiceInterface'
+            $campaignService: '@App\Promoting\ServiceInterface\PromotionCampaignServiceInterface'
+
+    App\Promoting\ServiceInterface\PromotionCampaignTransactionServiceInterface:
+        alias: App\Promoting\Service\PromotionCampaignTransactionService
+
     App\Promoting\Service\PromotionCheckoutPlanService:
         arguments:
             $selectionService: '@App\Promoting\ServiceInterface\PromotionSelectionServiceInterface'

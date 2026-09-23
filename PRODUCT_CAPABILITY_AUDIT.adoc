@@ -26,7 +26,7 @@ Promoting now has an executable commercial-incentive core. Pricing remains autho
 |Campaign grouping |IMPLEMENTED |Campaigns group promotion identifiers and support activate/pause/resume lifecycle.
 |Campaign-scoped selection |IMPLEMENTED |Available campaigns resolve member IDs through the promotion catalog, preserve missing-member reasons, and select eligible members deterministically.
 |Campaign budgets |IMPLEMENTED |Cumulative spend is bounded and budget exhaustion is evaluated deterministically.
-|Campaign application/spend |IMPLEMENTED |Campaign-scoped promotions resolve and apply through stacking rules; discount spend is recorded atomically only when remaining budget permits it.
+|Campaign application/spend |IMPLEMENTED |Campaign-scoped promotions resolve and apply through stacking rules; per-order spend ledger state is synchronized with cumulative campaign spend, supports idempotent replay, and releases budget atomically on reversal.
 |Buy-X-Get-Y/free gift |IMPLEMENTED |Typed entitlement facts preserve qualifying/reward SKU and quantity semantics.
 |Free shipping incentive |IMPLEMENTED |Promoting emits free-shipping eligibility only; Shipping retains shipment execution ownership.
 |Redemption ledger/reversal |PARTIAL |Immutable idempotent redeem/reverse semantics are implemented through coupon and checkout transaction layers, including cancellation/refund-style reversal; durable concurrent persistence remains an integration concern.
@@ -49,4 +49,5 @@ Milestone 11: automatic versus coupon-required activation semantics implemented 
 Milestone 12: read-only checkout promotion planning implemented across automatic, coupon, stacking, and typed-benefit semantics.
 Milestone 13: unified checkout application implemented with participation-gated coupon redemption and idempotent replay.
 Milestone 14: checkout coupon reversal implemented with idempotent no-op semantics and promotion-owned ledger isolation.
+Milestone 15: campaign per-order spend ledger, idempotent replay, synchronization guard, and atomic spend reversal implemented.
 

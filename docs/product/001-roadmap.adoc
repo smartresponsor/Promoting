@@ -96,3 +96,11 @@
 * Leave Cart and Order state outside Promoting ownership.
 * Surface missing-coupon reversal as an auditable no-op result.
 
+== Milestone 15
+
+* Track campaign spend by campaign/order identity in an immutable ledger.
+* Keep campaign aggregate spend synchronized with active ledger spend.
+* Preserve idempotent same-order campaign application replay.
+* Reverse campaign spend atomically for cancellation/refund flows.
+* Reject aggregate/ledger drift instead of silently repairing it.
+

@@ -27,4 +27,7 @@ interface PromotionCampaignServiceInterface
 
     /** Adds spend atomically at the value-object boundary and rejects budget overflow. */
     public function recordSpend(PromotionCampaign $campaign, int $amountMinor): PromotionCampaign;
+
+    /** Releases previously recorded spend and rejects underflow. */
+    public function releaseSpend(PromotionCampaign $campaign, int $amountMinor): PromotionCampaign;
 }

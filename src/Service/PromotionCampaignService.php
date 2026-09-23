@@ -12,6 +12,7 @@ use App\Promoting\ValueObject\PromotionCampaign;
 /** Implements deterministic campaign lifecycle, window, and budget controls. */
 final class PromotionCampaignService implements PromotionCampaignServiceInterface
 {
+    /** Evaluates whether the campaign is active, within its time window, and below its spend budget. */
     public function evaluate(
         PromotionCampaign $campaign,
         \DateTimeImmutable $at,
@@ -40,6 +41,7 @@ final class PromotionCampaignService implements PromotionCampaignServiceInterfac
         return new PromotionCampaignEvaluationDTO(true, $reasons);
     }
 
+    /** Activates a campaign only when its current time and budget constraints allow activation. */
     public function activate(PromotionCampaign $campaign, \DateTimeImmutable $at): PromotionCampaign
     {
         $candidate = $campaign->withStatus(PromotionCampaignStatus::Active);
@@ -50,6 +52,7 @@ final class PromotionCampaignService implements PromotionCampaignServiceInterfac
         return $candidate;
     }
 
+    /** Pauses an active campaign without changing its window, members, or accumulated spend. */
     public function pause(PromotionCampaign $campaign): PromotionCampaign
     {
         if (PromotionCampaignStatus::Active !== $campaign->status) {
@@ -59,6 +62,7 @@ final class PromotionCampaignService implements PromotionCampaignServiceInterfac
         return $campaign->withStatus(PromotionCampaignStatus::Paused);
     }
 
+    /** Resumes a paused campaign by reusing the same availability checks as activation. */
     public function resume(PromotionCampaign $campaign, \DateTimeImmutable $at): PromotionCampaign
     {
         if (PromotionCampaignStatus::Paused !== $campaign->status) {
@@ -68,6 +72,7 @@ final class PromotionCampaignService implements PromotionCampaignServiceInterfac
         return $this->activate($campaign, $at);
     }
 
+    /** Adds a non-negative spend amount while enforcing the campaign budget ceiling. */
     public function recordSpend(PromotionCampaign $campaign, int $amountMinor): PromotionCampaign
     {
         if ($amountMinor < 0) {
@@ -80,5 +85,18 @@ final class PromotionCampaignService implements PromotionCampaignServiceInterfac
         }
 
         return $campaign->withSpentMinor($nextSpent);
+    }
+
+    /** Releases previously recorded spend while preventing aggregate underflow. */
+    public function releaseSpend(PromotionCampaign $campaign, int $amountMinor): PromotionCampaign
+    {
+        if ($amountMinor < 0) {
+            throw new \InvalidArgumentException('Campaign spend release cannot be negative.');
+        }
+        if ($amountMinor > $campaign->spentMinor) {
+            throw new \DomainException('Campaign spend release cannot exceed recorded spend.');
+        }
+
+        return $campaign->withSpentMinor($campaign->spentMinor - $amountMinor);
     }
 }

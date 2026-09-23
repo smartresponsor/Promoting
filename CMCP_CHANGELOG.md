@@ -133,5 +133,11 @@ Added checkout coupon reversal over promotion-owned immutable ledger state. Reve
 
 Verification: PHPUnit 144 tests / 369 assertions green; PHPStan clean; fresh Xdebug coverage remains above canonical thresholds at lines 99.8%, methods 80.0%, branches 94.4%. Composer strict/check-lock remains valid on the canonical symlink dependency topology.
 
-Canonical enforcement note: local Canonization Canon053 explicitly permits symlinked sibling repositories for Gating, Cruding, Viewing, Interfacing, Collectioning, Objecting, Tabling, Runtime, and Indexing. The current Gating mirror has a stale four-item exception list and therefore falsely rejects Promoting's canonical Collectioning/Objecting/Tabling symlinks. An experimental VCS migration was fully reverted after proving that local VCS would allow Composer to attempt checkout operations in dirty sibling working repositories. Promoting retains the normative Canonization topology; the remaining aggregate gate failure is external mirror drift, not a target repository violation.
+Canonical enforcement note: local Canonization Canon053 explicitly permits symlinked sibling repositories for Gating, Cruding, Viewing, Interfacing, Collectioning, Objecting, Tabling, Runtime, and Indexing. During Milestone 14 verification the installed Gating mirror briefly exposed an older four-item exception contour; an experimental VCS migration was fully reverted after proving that local VCS would allow Composer to attempt checkout operations in dirty sibling working repositories. Gating was subsequently synchronized with Canonization, Canon053 now passes on the normative symlink topology, and no Composer workaround remains in Promoting.
+
+## 2026-09-23 Milestone 15
+
+Added per-order campaign spend transactions over immutable promotion-owned state. Campaign application now has an optional transaction layer that records spend by campaign/order identity, preserves same-order idempotent replay, validates aggregate/ledger synchronization, and reverses spend atomically so cancelled/refunded orders release campaign budget without mutating Cart or Order ownership.
+
+Verification: PHPUnit 153 tests / 415 assertions green; PHPStan clean; PHP-CS-Fixer clean; Playwright/behavioral coverage green; Composer strict/check-lock and PHP lint green; Symfony boot, YAML lint, and container lint green. Gating 69 rules with 0 failures and 0 warnings. Canon031 passes at 73.7% contract-method PHPDoc coverage. Canon040 passes at lines 99.8%, methods 81.0%, branches 94.6%.
 
