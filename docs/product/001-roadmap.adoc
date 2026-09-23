@@ -82,3 +82,10 @@
 * Produce typed non-price benefits only for promotions reached by resolution.
 * Keep cart/order/campaign/redemption state immutable during planning.
 
+== Milestone 13
+
+* Apply the unified checkout promotion plan.
+* Record coupon redemption only when the coupon promotion actually participates in resolution.
+* Preserve idempotent same-order replay at usage limits.
+* Leave promotion-owned ledger state unchanged when a coupon is invalid or displaced by exclusivity.
+

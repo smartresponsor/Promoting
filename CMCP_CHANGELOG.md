@@ -121,3 +121,9 @@ Added a read-only checkout promotion plan that combines automatic promotions and
 
 Verification: PHPUnit 128 tests / 325 assertions green; PHPStan clean; PHP-CS-Fixer clean; Playwright/behavioral coverage green; Gating 68 rules with 0 failures and 0 warnings. Canon040 remains green at lines 99.7%, methods 80.0%, branches 94.5%; Canon031 is green at 75.4% contract-method PHPDoc coverage.
 
+## 2026-09-23 Milestone 13
+
+Added unified checkout promotion application over promotion-owned state. Coupon redemption is recorded only when the linked coupon promotion actually participates in the unified priority/stacking/exclusivity resolution. Higher-priority exclusive automatic promotions can displace a coupon without consuming it; invalid coupons leave the ledger unchanged; same-order replay remains idempotent at usage limits; and redemption-backend failure preserves the original ledger.
+
+Verification: PHPUnit 138 tests / 355 assertions green; PHPStan clean; PHP-CS-Fixer clean; Playwright/behavioral coverage green; Gating 68 rules with 0 failures and 0 warnings. Canon040 passes at lines 99.7%, methods 80.7%, branches 94.7%; Canon031 remains green above threshold.
+

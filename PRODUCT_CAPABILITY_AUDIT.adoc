@@ -14,6 +14,7 @@ Promoting now has an executable commercial-incentive core. Pricing remains autho
 |Promotion activation mode |IMPLEMENTED |Promotions explicitly declare automatic or coupon-required activation; automatic selection excludes coupon-only promotions while coupon resolution can activate them.
 |Promotion catalog/selection |IMPLEMENTED |Immutable catalog enforces promotion-id uniqueness and selects eligible promotions deterministically while preserving every evaluation result.
 |Checkout promotion planning |IMPLEMENTED |Read-only planning combines automatic and optional coupon promotions before one priority/stacking resolution, then emits typed benefits only for promotions reached by that resolver.
+|Checkout promotion application |IMPLEMENTED |Unified checkout planning can be applied to promotion-owned redemption state; a coupon is redeemed only when its linked promotion actually participates, with same-order idempotent replay.
 |Conditions/eligibility rules |IMPLEMENTED |Ordered deterministic minimum-subtotal and currency conditions with reason codes.
 |Actions/application methods |IMPLEMENTED |Fixed and basis-point percentage monetary actions plus typed non-price benefit evaluation.
 |Coupon issuance/validation |IMPLEMENTED |Immutable issuance book enforces normalized uniqueness; issue/deactivate lifecycle, customer binding, validity windows, and deterministic validation are implemented.
@@ -46,4 +47,5 @@ Milestone 9: campaign-scoped catalog resolution and eligible promotion selection
 Milestone 10: campaign application with atomic budget spend accounting implemented.
 Milestone 11: automatic versus coupon-required activation semantics implemented and verified.
 Milestone 12: read-only checkout promotion planning implemented across automatic, coupon, stacking, and typed-benefit semantics.
+Milestone 13: unified checkout application implemented with participation-gated coupon redemption and idempotent replay.
 
