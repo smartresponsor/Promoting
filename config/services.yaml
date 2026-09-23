@@ -92,6 +92,7 @@ services:
     App\Promoting\Service\PromotionCheckoutPlanService:
         arguments:
             $selectionService: '@App\Promoting\ServiceInterface\PromotionSelectionServiceInterface'
+            $campaignSelectionService: '@App\Promoting\ServiceInterface\PromotionCampaignSelectionServiceInterface'
             $couponResolutionService: '@App\Promoting\ServiceInterface\PromotionCouponResolutionServiceInterface'
             $resolutionService: '@App\Promoting\ServiceInterface\PromotionResolutionServiceInterface'
             $benefitService: '@App\Promoting\ServiceInterface\PromotionBenefitServiceInterface'

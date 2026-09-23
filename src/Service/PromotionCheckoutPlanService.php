@@ -8,11 +8,13 @@ use App\Promoting\DTO\PromotionBenefitRequestDTO;
 use App\Promoting\DTO\PromotionCheckoutPlanResultDTO;
 use App\Promoting\DTO\PromotionEvaluationRequestDTO;
 use App\Promoting\ServiceInterface\PromotionBenefitServiceInterface;
+use App\Promoting\ServiceInterface\PromotionCampaignSelectionServiceInterface;
 use App\Promoting\ServiceInterface\PromotionCheckoutPlanServiceInterface;
 use App\Promoting\ServiceInterface\PromotionCouponResolutionServiceInterface;
 use App\Promoting\ServiceInterface\PromotionResolutionServiceInterface;
 use App\Promoting\ServiceInterface\PromotionSelectionServiceInterface;
 use App\Promoting\ValueObject\Promotion;
+use App\Promoting\ValueObject\PromotionCampaign;
 use App\Promoting\ValueObject\PromotionCatalog;
 use App\Promoting\ValueObject\PromotionCouponBook;
 use App\Promoting\ValueObject\PromotionRedemptionLedger;
@@ -22,6 +24,7 @@ final readonly class PromotionCheckoutPlanService implements PromotionCheckoutPl
 {
     public function __construct(
         private PromotionSelectionServiceInterface $selectionService,
+        private PromotionCampaignSelectionServiceInterface $campaignSelectionService,
         private PromotionCouponResolutionServiceInterface $couponResolutionService,
         private PromotionResolutionServiceInterface $resolutionService,
         private PromotionBenefitServiceInterface $benefitService,
@@ -36,12 +39,28 @@ final readonly class PromotionCheckoutPlanService implements PromotionCheckoutPl
         PromotionBenefitRequestDTO $benefitRequest,
         ?string $couponCode = null,
         ?string $customerId = null,
+        ?PromotionCampaign $campaign = null,
     ): PromotionCheckoutPlanResultDTO {
         $this->assertSameContext($request, $benefitRequest);
 
         $selection = $this->selectionService->select($catalog, $request);
         $candidates = $selection->promotions;
         $reasons = ['automatic_promotions_selected:'.count($candidates)];
+
+        $campaignSelection = null;
+        if (null !== $campaign) {
+            $campaignSelection = $this->campaignSelectionService->select($campaign, $catalog, $request);
+            $reasons = [...$reasons, ...$campaignSelection->reasons];
+
+            if ($campaignSelection->available) {
+                foreach ($campaignSelection->promotions as $promotion) {
+                    $candidates = $this->appendUnique($candidates, $promotion);
+                }
+                $reasons[] = 'campaign_promotions_included:'.count($campaignSelection->promotions);
+            } else {
+                $reasons[] = 'campaign_promotions_not_included';
+            }
+        }
 
         $couponResolution = null;
         if (null !== $couponCode) {
@@ -99,6 +118,7 @@ final readonly class PromotionCheckoutPlanService implements PromotionCheckoutPl
         return new PromotionCheckoutPlanResultDTO(
             $resolution,
             $couponResolution,
+            $campaignSelection,
             $benefits,
             $reasons,
         );

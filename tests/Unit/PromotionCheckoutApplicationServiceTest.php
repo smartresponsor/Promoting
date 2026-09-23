@@ -12,6 +12,8 @@ use App\Promoting\Enum\PromotionActivationMode;
 use App\Promoting\Enum\PromotionStackingMode;
 use App\Promoting\Service\PromotionApplicationService;
 use App\Promoting\Service\PromotionBenefitService;
+use App\Promoting\Service\PromotionCampaignSelectionService;
+use App\Promoting\Service\PromotionCampaignService;
 use App\Promoting\Service\PromotionCheckoutApplicationService;
 use App\Promoting\Service\PromotionCheckoutPlanService;
 use App\Promoting\Service\PromotionCouponResolutionService;
@@ -38,8 +40,11 @@ final class PromotionCheckoutApplicationServiceTest extends TestCase
         $evaluation = new PromotionEvaluationService();
         $coupon = new PromotionCouponService();
         $application = new PromotionApplicationService($evaluation);
+        $selection = new PromotionSelectionService($evaluation);
+        $campaign = new PromotionCampaignService();
         $plan = new PromotionCheckoutPlanService(
-            new PromotionSelectionService($evaluation),
+            $selection,
+            new PromotionCampaignSelectionService($campaign, $selection),
             new PromotionCouponResolutionService($coupon, $evaluation),
             new PromotionResolutionService($application),
             new PromotionBenefitService($evaluation),
@@ -350,8 +355,11 @@ final class PromotionCheckoutApplicationServiceTest extends TestCase
         $evaluation = new PromotionEvaluationService();
         $planningCouponService = new PromotionCouponService();
         $application = new PromotionApplicationService($evaluation);
+        $selection = new PromotionSelectionService($evaluation);
+        $campaign = new PromotionCampaignService();
         $plan = new PromotionCheckoutPlanService(
-            new PromotionSelectionService($evaluation),
+            $selection,
+            new PromotionCampaignSelectionService($campaign, $selection),
             new PromotionCouponResolutionService($planningCouponService, $evaluation),
             new PromotionResolutionService($application),
             new PromotionBenefitService($evaluation),

@@ -111,3 +111,11 @@
 * Allow automatic and campaign-only promotions inside campaign context.
 * Keep coupon-only promotions isolated from campaign selection.
 
+== Milestone 17
+
+* Accept an explicit optional campaign context during checkout planning.
+* Merge eligible campaign promotions into the same automatic/coupon candidate set before resolution.
+* Return campaign selection evidence with the read-only checkout plan.
+* Preserve typed benefits and exclusivity across campaign and non-campaign promotions.
+* Keep campaign budget/spend immutable during planning.
+

@@ -147,3 +147,9 @@ Added explicit campaign-only promotion activation. Ordinary automatic selection 
 
 Verification before final aggregate quality: PHPUnit 155 tests / 423 assertions green; PHPStan clean; fresh Xdebug coverage lines 99.8%, methods 80.4%, branches 94.0%. No new persistence, Cart/Order mutation, or sibling repository changes were introduced.
 
+## 2026-09-23 Milestone 17
+
+Extended the existing read-only checkout planner with an optional explicit campaign context. Eligible campaign promotions are resolved through the campaign selection service, merged with automatic and optional coupon promotions before the single priority/stacking/exclusivity resolver, and preserved as campaign selection evidence in the plan result. Typed benefits participate in the same final resolution. Planning remains side-effect free: campaign spend/budget, coupon redemption, Cart, and Order state are not mutated.
+
+Verification: PHPUnit 157 tests / 437 assertions green; PHPStan clean; PHP-CS-Fixer clean; Playwright/behavioral coverage green; Symfony YAML/container lint green; Gating 69 rules with 0 failures and 0 warnings. Canon031 passes at 75.6% contract-method PHPDoc coverage. Canon040 passes at lines 99.8%, methods 80.4%, branches 94.0%. Active-campaign inclusion and inactive-campaign fallback are covered explicitly.
+

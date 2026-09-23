@@ -7,9 +7,12 @@ namespace App\Promoting\Tests\Unit;
 use App\Promoting\DTO\PromotionBenefitRequestDTO;
 use App\Promoting\DTO\PromotionEvaluationRequestDTO;
 use App\Promoting\Enum\PromotionActivationMode;
+use App\Promoting\Enum\PromotionCampaignStatus;
 use App\Promoting\Enum\PromotionStackingMode;
 use App\Promoting\Service\PromotionApplicationService;
 use App\Promoting\Service\PromotionBenefitService;
+use App\Promoting\Service\PromotionCampaignSelectionService;
+use App\Promoting\Service\PromotionCampaignService;
 use App\Promoting\Service\PromotionCheckoutPlanService;
 use App\Promoting\Service\PromotionCouponResolutionService;
 use App\Promoting\Service\PromotionCouponService;
@@ -19,6 +22,7 @@ use App\Promoting\Service\PromotionSelectionService;
 use App\Promoting\ValueObject\Promotion;
 use App\Promoting\ValueObject\PromotionAction;
 use App\Promoting\ValueObject\PromotionBenefit;
+use App\Promoting\ValueObject\PromotionCampaign;
 use App\Promoting\ValueObject\PromotionCatalog;
 use App\Promoting\ValueObject\PromotionCoupon;
 use App\Promoting\ValueObject\PromotionCouponBook;
@@ -34,9 +38,12 @@ final class PromotionCheckoutPlanServiceTest extends TestCase
         $evaluation = new PromotionEvaluationService();
         $coupon = new PromotionCouponService();
         $application = new PromotionApplicationService($evaluation);
+        $selection = new PromotionSelectionService($evaluation);
+        $campaign = new PromotionCampaignService();
 
         return new PromotionCheckoutPlanService(
-            new PromotionSelectionService($evaluation),
+            $selection,
+            new PromotionCampaignSelectionService($campaign, $selection),
             new PromotionCouponResolutionService($coupon, $evaluation),
             new PromotionResolutionService($application),
             new PromotionBenefitService($evaluation),
@@ -185,6 +192,89 @@ final class PromotionCheckoutPlanServiceTest extends TestCase
 
         self::assertCount(1, $result->resolution->applications);
         self::assertSame(100, $result->resolution->totalDiscountAmountMinor);
+    }
+
+    public function testActiveCampaignAddsCampaignOnlyPromotionToUnifiedCheckoutResolution(): void
+    {
+        $automatic = new Promotion(
+            'automatic',
+            'Automatic',
+            new PromotionRule(),
+            PromotionAction::fixed(100),
+            priority: 10,
+        );
+        $campaignOnly = new Promotion(
+            'campaign-only',
+            'Campaign Only',
+            new PromotionRule(),
+            PromotionAction::fixed(200),
+            priority: 100,
+            stackingMode: PromotionStackingMode::Exclusive,
+            benefit: PromotionBenefit::freeGift('GIFT'),
+            activationMode: PromotionActivationMode::Campaign,
+        );
+        $campaign = new PromotionCampaign(
+            'campaign',
+            'Campaign',
+            ['campaign-only'],
+            status: PromotionCampaignStatus::Active,
+        );
+
+        $result = $this->service()->plan(
+            new PromotionCatalog([$automatic, $campaignOnly]),
+            new PromotionCouponBook(),
+            new PromotionRedemptionLedger(),
+            $this->request(),
+            $this->benefitRequest(),
+            campaign: $campaign,
+        );
+
+        self::assertNotNull($result->campaignSelection);
+        self::assertTrue($result->campaignSelection->available);
+        self::assertSame(200, $result->resolution->totalDiscountAmountMinor);
+        self::assertCount(1, $result->resolution->applications);
+        self::assertSame('campaign-only', $result->resolution->applications[0]->promotionId);
+        self::assertCount(1, $result->benefits);
+        self::assertSame('GIFT', $result->benefits[0]->rewardSku);
+        self::assertContains('campaign_promotions_included:1', $result->reasons);
+    }
+
+    public function testUnavailableCampaignDoesNotChangeAutomaticCheckoutPlan(): void
+    {
+        $automatic = new Promotion(
+            'automatic',
+            'Automatic',
+            new PromotionRule(),
+            PromotionAction::fixed(100),
+        );
+        $campaignOnly = new Promotion(
+            'campaign-only',
+            'Campaign Only',
+            new PromotionRule(),
+            PromotionAction::fixed(300),
+            activationMode: PromotionActivationMode::Campaign,
+        );
+        $campaign = new PromotionCampaign(
+            'campaign',
+            'Campaign',
+            ['campaign-only'],
+        );
+
+        $result = $this->service()->plan(
+            new PromotionCatalog([$automatic, $campaignOnly]),
+            new PromotionCouponBook(),
+            new PromotionRedemptionLedger(),
+            $this->request(),
+            $this->benefitRequest(),
+            campaign: $campaign,
+        );
+
+        self::assertNotNull($result->campaignSelection);
+        self::assertFalse($result->campaignSelection->available);
+        self::assertSame(100, $result->resolution->totalDiscountAmountMinor);
+        self::assertCount(1, $result->resolution->applications);
+        self::assertSame('automatic', $result->resolution->applications[0]->promotionId);
+        self::assertContains('campaign_promotions_not_included', $result->reasons);
     }
 
     public function testCouponCodeRequiresCustomerIdentity(): void

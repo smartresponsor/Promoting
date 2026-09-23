@@ -14,6 +14,7 @@ final readonly class PromotionCheckoutPlanResultDTO
     public function __construct(
         public PromotionResolutionResultDTO $resolution,
         public ?PromotionCouponResolutionResultDTO $couponResolution,
+        public ?PromotionCampaignSelectionResultDTO $campaignSelection,
         public array $benefits,
         public array $reasons,
     ) {
