@@ -9,9 +9,11 @@ use App\Promoting\DTO\PromotionEvaluationRequestDTO;
 use App\Promoting\ServiceInterface\PromotionCampaignApplicationServiceInterface;
 use App\Promoting\ServiceInterface\PromotionCampaignServiceInterface;
 use App\Promoting\ServiceInterface\PromotionCampaignTransactionServiceInterface;
+use App\Promoting\ServiceInterface\PromotionCampaignUsageServiceInterface;
 use App\Promoting\ValueObject\PromotionCampaign;
 use App\Promoting\ValueObject\PromotionCampaignSpend;
 use App\Promoting\ValueObject\PromotionCampaignSpendLedger;
+use App\Promoting\ValueObject\PromotionCampaignUsageLedger;
 use App\Promoting\ValueObject\PromotionCatalog;
 
 /** Keeps campaign aggregate spend and per-order spend ledger synchronized across apply and reversal flows. */
@@ -20,6 +22,7 @@ final readonly class PromotionCampaignTransactionService implements PromotionCam
     public function __construct(
         private PromotionCampaignApplicationServiceInterface $applicationService,
         private PromotionCampaignServiceInterface $campaignService,
+        private PromotionCampaignUsageServiceInterface $usageService,
     ) {
     }
 
@@ -30,12 +33,18 @@ final readonly class PromotionCampaignTransactionService implements PromotionCam
         PromotionCampaignSpendLedger $ledger,
         string $orderId,
         PromotionEvaluationRequestDTO $request,
+        ?PromotionCampaignUsageLedger $usageLedger = null,
     ): PromotionCampaignTransactionResultDTO {
         $this->assertOrderId($orderId);
         $this->assertSynchronized($campaign, $ledger);
+        $this->assertUsageLedgerAvailable($campaign, $usageLedger);
 
         $existing = $ledger->findActive($campaign->id, $orderId);
         if (null !== $existing) {
+            if (null !== $usageLedger && null === $usageLedger->findActive($campaign->id, $orderId)) {
+                throw new \DomainException('Campaign spend replay is missing its campaign usage record.');
+            }
+
             return new PromotionCampaignTransactionResultDTO(
                 true,
                 $campaign,
@@ -43,7 +52,23 @@ final readonly class PromotionCampaignTransactionService implements PromotionCam
                 null,
                 $existing,
                 ['campaign_spend_idempotent_replay'],
+                $usageLedger,
             );
+        }
+
+        if (null !== $usageLedger) {
+            $usageValidation = $this->usageService->validate($campaign, $usageLedger, $orderId);
+            if (!$usageValidation->allowed) {
+                return new PromotionCampaignTransactionResultDTO(
+                    false,
+                    $campaign,
+                    $ledger,
+                    null,
+                    null,
+                    [...$usageValidation->reasons, 'campaign_transaction_not_applied'],
+                    $usageLedger,
+                );
+            }
         }
 
         $application = $this->applicationService->apply($campaign, $catalog, $request);
@@ -55,11 +80,20 @@ final readonly class PromotionCampaignTransactionService implements PromotionCam
                 $application,
                 null,
                 [...$application->reasons, 'campaign_transaction_not_applied'],
+                $usageLedger,
             );
         }
 
         $amountMinor = $application->resolution->totalDiscountAmountMinor;
         $spend = new PromotionCampaignSpend($campaign->id, $orderId, $amountMinor);
+        $nextUsageLedger = $usageLedger;
+        if (null !== $usageLedger) {
+            $usageMutation = $this->usageService->record($campaign, $usageLedger, $orderId);
+            if (!$usageMutation->changed && null === $usageMutation->usage) {
+                throw new \DomainException('Campaign usage changed between validation and recording.');
+            }
+            $nextUsageLedger = $usageMutation->ledger;
+        }
 
         return new PromotionCampaignTransactionResultDTO(
             true,
@@ -68,6 +102,7 @@ final readonly class PromotionCampaignTransactionService implements PromotionCam
             $application,
             $spend,
             [...$application->reasons, 'campaign_spend_recorded'],
+            $nextUsageLedger,
         );
     }
 
@@ -76,9 +111,11 @@ final readonly class PromotionCampaignTransactionService implements PromotionCam
         PromotionCampaign $campaign,
         PromotionCampaignSpendLedger $ledger,
         string $orderId,
+        ?PromotionCampaignUsageLedger $usageLedger = null,
     ): PromotionCampaignTransactionResultDTO {
         $this->assertOrderId($orderId);
         $this->assertSynchronized($campaign, $ledger);
+        $this->assertUsageLedgerAvailable($campaign, $usageLedger);
 
         $existing = $ledger->findActive($campaign->id, $orderId);
         if (null === $existing) {
@@ -89,10 +126,15 @@ final readonly class PromotionCampaignTransactionService implements PromotionCam
                 null,
                 null,
                 ['campaign_spend_reversal_idempotent_noop'],
+                $usageLedger,
             );
         }
 
         $updatedCampaign = $this->campaignService->releaseSpend($campaign, $existing->amountMinor);
+        $nextUsageLedger = $usageLedger;
+        if (null !== $usageLedger) {
+            $nextUsageLedger = $this->usageService->reverse($campaign, $usageLedger, $orderId)->ledger;
+        }
 
         return new PromotionCampaignTransactionResultDTO(
             true,
@@ -101,6 +143,7 @@ final readonly class PromotionCampaignTransactionService implements PromotionCam
             null,
             $existing->reversed(),
             ['campaign_spend_reversed'],
+            $nextUsageLedger,
         );
     }
 
@@ -117,6 +160,15 @@ final readonly class PromotionCampaignTransactionService implements PromotionCam
     ): void {
         if ($campaign->spentMinor !== $ledger->activeSpendForCampaign($campaign->id)) {
             throw new \DomainException('Campaign spend aggregate does not match campaign spend ledger.');
+        }
+    }
+
+    private function assertUsageLedgerAvailable(
+        PromotionCampaign $campaign,
+        ?PromotionCampaignUsageLedger $usageLedger,
+    ): void {
+        if (null !== $campaign->applicationLimit && null === $usageLedger) {
+            throw new \DomainException('Campaign application limit requires an explicit campaign usage ledger.');
         }
     }
 }

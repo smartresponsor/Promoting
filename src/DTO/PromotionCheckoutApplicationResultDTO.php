@@ -7,6 +7,7 @@ namespace App\Promoting\DTO;
 use App\Promoting\ValueObject\PromotionCampaign;
 use App\Promoting\ValueObject\PromotionCampaignSpend;
 use App\Promoting\ValueObject\PromotionCampaignSpendLedger;
+use App\Promoting\ValueObject\PromotionCampaignUsageLedger;
 use App\Promoting\ValueObject\PromotionRedemptionLedger;
 
 /** Checkout promotion application outcome carrying the read-only plan and resulting promotion-owned ledger state. */
@@ -21,6 +22,7 @@ final readonly class PromotionCheckoutApplicationResultDTO
         public ?PromotionCampaign $campaign = null,
         public ?PromotionCampaignSpendLedger $campaignSpendLedger = null,
         public ?PromotionCampaignSpend $campaignSpend = null,
+        public ?PromotionCampaignUsageLedger $campaignUsageLedger = null,
     ) {
     }
 }

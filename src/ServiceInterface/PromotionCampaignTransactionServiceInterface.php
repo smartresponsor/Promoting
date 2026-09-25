@@ -8,6 +8,7 @@ use App\Promoting\DTO\PromotionCampaignTransactionResultDTO;
 use App\Promoting\DTO\PromotionEvaluationRequestDTO;
 use App\Promoting\ValueObject\PromotionCampaign;
 use App\Promoting\ValueObject\PromotionCampaignSpendLedger;
+use App\Promoting\ValueObject\PromotionCampaignUsageLedger;
 use App\Promoting\ValueObject\PromotionCatalog;
 
 /** Applies and reverses campaign spend by stable order identity over explicit immutable state. */
@@ -19,11 +20,13 @@ interface PromotionCampaignTransactionServiceInterface
         PromotionCampaignSpendLedger $ledger,
         string $orderId,
         PromotionEvaluationRequestDTO $request,
+        ?PromotionCampaignUsageLedger $usageLedger = null,
     ): PromotionCampaignTransactionResultDTO;
 
     public function reverse(
         PromotionCampaign $campaign,
         PromotionCampaignSpendLedger $ledger,
         string $orderId,
+        ?PromotionCampaignUsageLedger $usageLedger = null,
     ): PromotionCampaignTransactionResultDTO;
 }

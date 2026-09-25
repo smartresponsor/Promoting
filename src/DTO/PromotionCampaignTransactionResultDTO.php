@@ -7,6 +7,7 @@ namespace App\Promoting\DTO;
 use App\Promoting\ValueObject\PromotionCampaign;
 use App\Promoting\ValueObject\PromotionCampaignSpend;
 use App\Promoting\ValueObject\PromotionCampaignSpendLedger;
+use App\Promoting\ValueObject\PromotionCampaignUsageLedger;
 
 /** Campaign transaction outcome carrying synchronized aggregate and spend-ledger state. */
 final readonly class PromotionCampaignTransactionResultDTO
@@ -19,6 +20,7 @@ final readonly class PromotionCampaignTransactionResultDTO
         public ?PromotionCampaignApplicationResultDTO $application,
         public ?PromotionCampaignSpend $spend,
         public array $reasons,
+        public ?PromotionCampaignUsageLedger $usageLedger = null,
     ) {
     }
 }

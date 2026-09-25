@@ -26,6 +26,7 @@ Promoting now has an executable commercial-incentive core. Pricing remains autho
 |Campaign grouping |IMPLEMENTED |Campaigns group promotion identifiers and support activate/pause/resume lifecycle.
 |Campaign-scoped selection |IMPLEMENTED |Available campaigns resolve member IDs through the promotion catalog, preserve missing-member reasons, and select eligible members deterministically.
 |Campaign budgets |IMPLEMENTED |Cumulative spend is bounded and budget exhaustion is evaluated deterministically.
+|Campaign application limits |IMPLEMENTED |Campaigns may declare a global application limit enforced over an immutable campaign/order usage ledger with idempotent replay and reversal slot release; unified checkout falls back without campaign effects when capacity is exhausted and records usage only when a campaign promotion participates.
 |Campaign application/spend |IMPLEMENTED |Campaign-scoped promotions resolve and apply through stacking rules; per-order spend ledger state is synchronized with cumulative campaign spend, supports idempotent replay, and releases budget atomically on reversal.
 |Buy-X-Get-Y/free gift |IMPLEMENTED |Typed entitlement facts preserve qualifying/reward SKU and quantity semantics.
 |Free shipping incentive |IMPLEMENTED |Promoting emits free-shipping eligibility only; Shipping retains shipment execution ownership.
@@ -52,4 +53,6 @@ Milestone 14: checkout coupon reversal implemented with idempotent no-op semanti
 Milestone 15: campaign per-order spend ledger, idempotent replay, synchronization guard, and atomic spend reversal implemented.
 Milestone 16: explicit campaign-only activation implemented so campaign promotions cannot leak into ordinary automatic checkout selection.
 Milestone 17: read-only checkout planning now composes optional active-campaign promotions with automatic and coupon promotions before one resolver.
+Milestone 18: unified checkout application commits campaign spend only for campaign promotions reached by the final resolver, with replay/budget/drift safety.
+Milestone 19: global campaign application limits and immutable campaign/order usage ledger semantics implemented and enforced at campaign transaction and unified checkout boundaries, including benefit-only participation.
 

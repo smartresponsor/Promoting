@@ -10,12 +10,14 @@ use App\Promoting\DTO\PromotionCheckoutPlanResultDTO;
 use App\Promoting\DTO\PromotionCheckoutReversalResultDTO;
 use App\Promoting\DTO\PromotionEvaluationRequestDTO;
 use App\Promoting\ServiceInterface\PromotionCampaignServiceInterface;
+use App\Promoting\ServiceInterface\PromotionCampaignUsageServiceInterface;
 use App\Promoting\ServiceInterface\PromotionCheckoutApplicationServiceInterface;
 use App\Promoting\ServiceInterface\PromotionCheckoutPlanServiceInterface;
 use App\Promoting\ServiceInterface\PromotionCouponServiceInterface;
 use App\Promoting\ValueObject\PromotionCampaign;
 use App\Promoting\ValueObject\PromotionCampaignSpend;
 use App\Promoting\ValueObject\PromotionCampaignSpendLedger;
+use App\Promoting\ValueObject\PromotionCampaignUsageLedger;
 use App\Promoting\ValueObject\PromotionCatalog;
 use App\Promoting\ValueObject\PromotionCouponBook;
 use App\Promoting\ValueObject\PromotionRedemptionLedger;
@@ -27,6 +29,7 @@ final readonly class PromotionCheckoutApplicationService implements PromotionChe
         private PromotionCheckoutPlanServiceInterface $planService,
         private PromotionCouponServiceInterface $couponService,
         private PromotionCampaignServiceInterface $campaignService,
+        private PromotionCampaignUsageServiceInterface $usageService,
     ) {
     }
 
@@ -42,10 +45,12 @@ final readonly class PromotionCheckoutApplicationService implements PromotionChe
         ?string $orderId = null,
         ?PromotionCampaign $campaign = null,
         ?PromotionCampaignSpendLedger $campaignSpendLedger = null,
+        ?PromotionCampaignUsageLedger $campaignUsageLedger = null,
     ): PromotionCheckoutApplicationResultDTO {
         $planningLedger = $ledger;
         $planningCampaign = $campaign;
         $existingCampaignSpend = null;
+        $campaignUsageRejected = false;
 
         if (null !== $couponCode) {
             if (null === $customerId || '' === trim($customerId)) {
@@ -67,16 +72,38 @@ final readonly class PromotionCheckoutApplicationService implements PromotionChe
             if ($campaign->spentMinor !== $campaignSpendLedger->activeSpendForCampaign($campaign->id)) {
                 throw new \DomainException('Campaign spend aggregate does not match campaign spend ledger.');
             }
+            if (null !== $campaign->applicationLimit && null === $campaignUsageLedger) {
+                throw new \InvalidArgumentException('Campaign usage ledger is required when an application limit is configured.');
+            }
 
             $existingCampaignSpend = $campaignSpendLedger->findActive($campaign->id, $campaignOrderId);
+            if (
+                null !== $existingCampaignSpend
+                && null !== $campaignUsageLedger
+                && null === $campaignUsageLedger->findActive($campaign->id, $campaignOrderId)
+            ) {
+                throw new \DomainException('Campaign spend replay is missing its campaign usage record.');
+            }
             if (null !== $existingCampaignSpend) {
                 $planningCampaign = $this->campaignService->releaseSpend(
                     $campaign,
                     $existingCampaignSpend->amountMinor,
                 );
             }
-        } elseif (null !== $campaignSpendLedger) {
-            throw new \InvalidArgumentException('Campaign context is required when a campaign spend ledger is provided.');
+
+            if (null !== $campaignUsageLedger) {
+                $usageValidation = $this->usageService->validate(
+                    $campaign,
+                    $campaignUsageLedger,
+                    $campaignOrderId,
+                );
+                if (!$usageValidation->allowed) {
+                    $campaignUsageRejected = true;
+                    $planningCampaign = null;
+                }
+            }
+        } elseif (null !== $campaignSpendLedger || null !== $campaignUsageLedger) {
+            throw new \InvalidArgumentException('Campaign context is required when a campaign ledger is provided.');
         }
 
         $plan = $this->planService->plan(
@@ -89,6 +116,16 @@ final readonly class PromotionCheckoutApplicationService implements PromotionChe
             $customerId,
             $planningCampaign,
         );
+
+        if ($campaignUsageRejected) {
+            $plan = new PromotionCheckoutPlanResultDTO(
+                $plan->resolution,
+                $plan->couponResolution,
+                $plan->campaignSelection,
+                $plan->benefits,
+                [...$plan->reasons, 'checkout_campaign_application_limit_reached'],
+            );
+        }
 
         $campaignDiscountAmountMinor = $this->campaignDiscountAmount($plan);
         if (
@@ -163,9 +200,23 @@ final readonly class PromotionCheckoutApplicationService implements PromotionChe
 
         $resultCampaign = $campaign;
         $resultCampaignSpendLedger = $campaignSpendLedger;
+        $resultCampaignUsageLedger = $campaignUsageLedger;
         $campaignSpend = null;
 
         if (null !== $campaign) {
+            $campaignParticipated = $this->campaignParticipated($plan);
+            if ($campaignUsageRejected) {
+                $reasons[] = 'checkout_campaign_usage_not_recorded_limit';
+            } elseif ($campaignParticipated && null !== $campaignUsageLedger) {
+                $usageMutation = $this->usageService->record(
+                    $campaign,
+                    $campaignUsageLedger,
+                    $this->requireOrderId($orderId),
+                );
+                $resultCampaignUsageLedger = $usageMutation->ledger;
+                $reasons = [...$reasons, ...$usageMutation->reasons];
+            }
+
             if ($campaignBudgetRejected) {
                 $reasons[] = 'checkout_campaign_spend_not_recorded_budget';
             } elseif (null === $plan->campaignSelection || !$plan->campaignSelection->available) {
@@ -195,6 +246,7 @@ final readonly class PromotionCheckoutApplicationService implements PromotionChe
             $resultCampaign,
             $resultCampaignSpendLedger,
             $campaignSpend,
+            $resultCampaignUsageLedger,
         );
     }
 
@@ -211,6 +263,26 @@ final readonly class PromotionCheckoutApplicationService implements PromotionChe
     {
         foreach ($plan->resolution->applications as $application) {
             if ($application->eligible && $application->promotionId === $promotionId) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function campaignParticipated(PromotionCheckoutPlanResultDTO $plan): bool
+    {
+        if (null === $plan->campaignSelection || !$plan->campaignSelection->available) {
+            return false;
+        }
+
+        $promotionIds = [];
+        foreach ($plan->campaignSelection->promotions as $promotion) {
+            $promotionIds[$promotion->id] = true;
+        }
+
+        foreach ($plan->resolution->applications as $application) {
+            if ($application->eligible && isset($promotionIds[$application->promotionId])) {
                 return true;
             }
         }

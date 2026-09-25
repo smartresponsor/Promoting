@@ -11,6 +11,7 @@ use App\Promoting\Service\PromotionCampaignApplicationService;
 use App\Promoting\Service\PromotionCampaignSelectionService;
 use App\Promoting\Service\PromotionCampaignService;
 use App\Promoting\Service\PromotionCampaignTransactionService;
+use App\Promoting\Service\PromotionCampaignUsageService;
 use App\Promoting\Service\PromotionEvaluationService;
 use App\Promoting\Service\PromotionResolutionService;
 use App\Promoting\Service\PromotionSelectionService;
@@ -19,6 +20,7 @@ use App\Promoting\ValueObject\PromotionAction;
 use App\Promoting\ValueObject\PromotionCampaign;
 use App\Promoting\ValueObject\PromotionCampaignSpend;
 use App\Promoting\ValueObject\PromotionCampaignSpendLedger;
+use App\Promoting\ValueObject\PromotionCampaignUsageLedger;
 use App\Promoting\ValueObject\PromotionCatalog;
 use App\Promoting\ValueObject\PromotionRule;
 use PHPUnit\Framework\TestCase;
@@ -41,6 +43,7 @@ final class PromotionCampaignTransactionServiceTest extends TestCase
                 $campaignService,
             ),
             $campaignService,
+            new PromotionCampaignUsageService(),
         );
     }
 
@@ -53,7 +56,7 @@ final class PromotionCampaignTransactionServiceTest extends TestCase
         );
     }
 
-    private function campaign(int $spentMinor = 0): PromotionCampaign
+    private function campaign(int $spentMinor = 0, ?int $applicationLimit = null): PromotionCampaign
     {
         return new PromotionCampaign(
             'campaign',
@@ -62,6 +65,7 @@ final class PromotionCampaignTransactionServiceTest extends TestCase
             budgetMinor: 1000,
             spentMinor: $spentMinor,
             status: PromotionCampaignStatus::Active,
+            applicationLimit: $applicationLimit,
         );
     }
 
@@ -194,6 +198,98 @@ final class PromotionCampaignTransactionServiceTest extends TestCase
             new PromotionCampaignSpendLedger(),
             '   ',
             $this->request(),
+        );
+    }
+
+    public function testApplicationLimitedCampaignRequiresUsageLedger(): void
+    {
+        $this->expectException(\DomainException::class);
+        $this->service()->apply(
+            $this->campaign(applicationLimit: 1),
+            $this->catalog(),
+            new PromotionCampaignSpendLedger(),
+            'order-1',
+            $this->request(),
+        );
+    }
+
+    public function testApplicationLimitIsEnforcedAtTransactionBoundary(): void
+    {
+        $first = $this->service()->apply(
+            $this->campaign(applicationLimit: 1),
+            $this->catalog(),
+            new PromotionCampaignSpendLedger(),
+            'order-1',
+            $this->request(),
+            new PromotionCampaignUsageLedger(),
+        );
+
+        self::assertTrue($first->successful);
+        self::assertNotNull($first->usageLedger);
+        self::assertSame(1, $first->usageLedger->activeCount('campaign'));
+
+        $second = $this->service()->apply(
+            $first->campaign,
+            $this->catalog(),
+            $first->ledger,
+            'order-2',
+            $this->request(),
+            $first->usageLedger,
+        );
+
+        self::assertFalse($second->successful);
+        self::assertContains('campaign_application_limit_reached', $second->reasons);
+        self::assertSame($first->ledger, $second->ledger);
+        self::assertSame($first->usageLedger, $second->usageLedger);
+    }
+
+    public function testUsageSlotIsReleasedWithCampaignSpendReversal(): void
+    {
+        $applied = $this->service()->apply(
+            $this->campaign(applicationLimit: 1),
+            $this->catalog(),
+            new PromotionCampaignSpendLedger(),
+            'order-1',
+            $this->request(),
+            new PromotionCampaignUsageLedger(),
+        );
+
+        self::assertNotNull($applied->usageLedger);
+
+        $reversed = $this->service()->reverse(
+            $applied->campaign,
+            $applied->ledger,
+            'order-1',
+            $applied->usageLedger,
+        );
+
+        self::assertNotNull($reversed->usageLedger);
+        self::assertSame(0, $reversed->usageLedger->activeCount('campaign'));
+
+        $next = $this->service()->apply(
+            $reversed->campaign,
+            $this->catalog(),
+            $reversed->ledger,
+            'order-2',
+            $this->request(),
+            $reversed->usageLedger,
+        );
+
+        self::assertTrue($next->successful);
+    }
+
+    public function testSpendReplayRejectsMissingUsageRecord(): void
+    {
+        $this->expectException(\DomainException::class);
+        $this->service()->apply(
+            $this->campaign(spentMinor: 200, applicationLimit: 1),
+            $this->catalog(),
+            new PromotionCampaignSpendLedger([
+                new PromotionCampaignSpend('campaign', 'order-1', 200),
+            ]),
+            'order-1',
+            $this->request(),
+            new PromotionCampaignUsageLedger(),
         );
     }
 }

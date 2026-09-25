@@ -73,6 +73,19 @@ final class PromotionApplicationServiceTest extends TestCase
         self::assertSame(['promotion_active', 'currency_mismatch', 'promotion_not_applied'], $result->reasons);
     }
 
+    public function testPromotionConditionsRejectInvalidDefinitions(): void
+    {
+        try {
+            PromotionCondition::minimumSubtotal(-1);
+            self::fail('Negative minimum subtotal must fail.');
+        } catch (\InvalidArgumentException $exception) {
+            self::assertSame('Minimum subtotal cannot be negative.', $exception->getMessage());
+        }
+
+        $this->expectException(\InvalidArgumentException::class);
+        PromotionCondition::currency('US1');
+    }
+
     public function testPromotionWindowRequiresExplicitTimeContext(): void
     {
         $promotion = new Promotion(

@@ -119,3 +119,18 @@
 * Preserve typed benefits and exclusivity across campaign and non-campaign promotions.
 * Keep campaign budget/spend immutable during planning.
 
+== Milestone 18
+
+* Commit campaign monetary spend only for campaign promotions reached by the unified checkout resolver.
+* Preserve same-order campaign replay without duplicate spend.
+* Fail closed on campaign aggregate/ledger or replay-amount drift.
+* Re-plan without campaign effects when remaining campaign budget is insufficient.
+* Keep benefit-only campaign applications free from monetary budget consumption.
+
+== Milestone 19
+
+* Add an optional global campaign application limit independent from monetary spend.
+* Track campaign usage by campaign/order identity in an immutable ledger.
+* Preserve same-order idempotent usage replay.
+* Reverse campaign usage idempotently to release an application slot.
+

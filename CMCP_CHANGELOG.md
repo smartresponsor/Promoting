@@ -167,3 +167,11 @@ RC-critical work stayed separate from growth. No speculative promotion feature w
 
 Acceptance evidence: Composer strict/check-lock validation passes; PHPUnit 167 tests / 477 assertions passes; PHPStan has zero errors; PHP-CS-Fixer reports zero fixable files; Playwright 1/1 passes; behavioral/UI evidence regenerates; Gating 70 rules reports 0 failures and 0 warnings, including Canon052 and Canon053. The aggregate `composer quality` wrapper itself exceeded Console MCP's bounded call timeout when re-run, so the same declared constituent scripts were executed independently with successful exit codes. No PHP source changed in this hardening pass.
 
+## 2026-09-24 Milestone 19
+
+Added global campaign application limits independently from monetary campaign budget. Campaign usage is represented by an immutable campaign/order ledger with deterministic active counts, same-order idempotent replay, and idempotent reversal that releases capacity. Campaign transactions now keep spend and usage replay state consistent and require explicit usage state when a limit is configured.
+
+Unified checkout enforces the same limit before campaign effects participate. Exhausted campaigns fall back to non-campaign resolution with explicit reason codes; usage is recorded only when a campaign promotion actually participates in the final resolver, including benefit-only campaigns that consume no monetary budget. Spend replay without its corresponding usage record fails closed.
+
+Verification: fresh Xdebug coverage is green at 182 tests / 544 assertions with lines 99.66%, methods 80.15%, branches 94.47%. Final aggregate quality is green at 182 tests / 544 assertions; PHPStan and PHP-CS-Fixer are clean, Playwright passes 1/1, behavioral evidence regenerates, Symfony YAML/test-container lint passes, Composer strict/check-lock validation passes, and Gating reports 9 rules with 0 failures and 0 warnings. Canon055 was also applied: Promoting human-facing descriptions now use neutral platform/component terminology, while the Smart Responder/Responsor aliases remain consumer/domain-only identities.
+

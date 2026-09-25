@@ -85,9 +85,15 @@ services:
         arguments:
             $applicationService: '@App\Promoting\ServiceInterface\PromotionCampaignApplicationServiceInterface'
             $campaignService: '@App\Promoting\ServiceInterface\PromotionCampaignServiceInterface'
+            $usageService: '@App\Promoting\ServiceInterface\PromotionCampaignUsageServiceInterface'
 
     App\Promoting\ServiceInterface\PromotionCampaignTransactionServiceInterface:
         alias: App\Promoting\Service\PromotionCampaignTransactionService
+
+    App\Promoting\Service\PromotionCampaignUsageService: ~
+
+    App\Promoting\ServiceInterface\PromotionCampaignUsageServiceInterface:
+        alias: App\Promoting\Service\PromotionCampaignUsageService
 
     App\Promoting\Service\PromotionCheckoutPlanService:
         arguments:
@@ -105,6 +111,7 @@ services:
             $planService: '@App\Promoting\ServiceInterface\PromotionCheckoutPlanServiceInterface'
             $couponService: '@App\Promoting\ServiceInterface\PromotionCouponServiceInterface'
             $campaignService: '@App\Promoting\ServiceInterface\PromotionCampaignServiceInterface'
+            $usageService: '@App\Promoting\ServiceInterface\PromotionCampaignUsageServiceInterface'
 
     App\Promoting\ServiceInterface\PromotionCheckoutApplicationServiceInterface:
         alias: App\Promoting\Service\PromotionCheckoutApplicationService

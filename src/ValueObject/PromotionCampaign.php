@@ -21,6 +21,7 @@ final readonly class PromotionCampaign
         public ?int $budgetMinor = null,
         public int $spentMinor = 0,
         public PromotionCampaignStatus $status = PromotionCampaignStatus::Inactive,
+        public ?int $applicationLimit = null,
     ) {
         if ('' === trim($id) || '' === trim($label)) {
             throw new \InvalidArgumentException('Campaign id and label cannot be empty.');
@@ -42,6 +43,9 @@ final readonly class PromotionCampaign
         if ($spentMinor < 0 || (null !== $budgetMinor && $spentMinor > $budgetMinor)) {
             throw new \InvalidArgumentException('Campaign spend must stay within budget.');
         }
+        if (null !== $applicationLimit && $applicationLimit < 1) {
+            throw new \InvalidArgumentException('Campaign application limit must be at least one.');
+        }
     }
 
     /** Returns the campaign with another lifecycle status. */
@@ -56,6 +60,7 @@ final readonly class PromotionCampaign
             $this->budgetMinor,
             $this->spentMinor,
             $status,
+            $this->applicationLimit,
         );
     }
 
@@ -71,6 +76,7 @@ final readonly class PromotionCampaign
             $this->budgetMinor,
             $spentMinor,
             $this->status,
+            $this->applicationLimit,
         );
     }
 }
