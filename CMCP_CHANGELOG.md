@@ -175,3 +175,18 @@ Unified checkout enforces the same limit before campaign effects participate. Ex
 
 Verification: fresh Xdebug coverage is green at 182 tests / 544 assertions with lines 99.66%, methods 80.15%, branches 94.47%. Final aggregate quality is green at 182 tests / 544 assertions; PHPStan and PHP-CS-Fixer are clean, Playwright passes 1/1, behavioral evidence regenerates, Symfony YAML/test-container lint passes, Composer strict/check-lock validation passes, and Gating reports 9 rules with 0 failures and 0 warnings. Canon055 was also applied: Promoting human-facing descriptions now use neutral platform/component terminology, while the Smart Responder/Responsor aliases remain consumer/domain-only identities.
 
+## 2026-09-25 RC replay-drift hardening
+
+Reconnaissance re-read the Promoting boundary, roadmap, capability audit, Composer/runtime wiring, checkout/campaign transaction hotspots, Objecting/Cruding/Viewing/Interfacing contracts, Gating, and the applicable textual Canonization rules. The target mapping remains promoting/promotion -> App\\Promoting\\ -> Promotion*, with dual runtime, exact dev-master sibling path identities, no generic CRUD ownership, and no forbidden architecture roots.
+
+Market comparison was refreshed against Medusa campaign budgets, Vendure condition/action promotion modeling, and Shopify discount combination/usage-limit behavior. RC-critical work remains lifecycle/idempotency safety; richer combination matrices, reservation/hold semantics, and additional operator UX remain post-RC growth.
+
+The baseline composer quality gate passed before mutation at 182 tests / 544 assertions, PHPStan clean, PHP-CS-Fixer clean, Playwright 1/1, behavioral coverage generated, and Gating 9/9 with zero failures/warnings. A semantic replay gap remained outside those deterministic gates: an already-redeemed coupon could be re-planned for the same order after eligibility/stacking drift, return a plan in which the coupon no longer participated, yet leave the prior active redemption in the result ledger.
+
+Checkout replay now fails closed when an existing coupon redemption no longer resolves to an eligible/reached coupon promotion in the current unified plan. Replay planning removes the matching prior redemption regardless of current coupon-book lookup so missing/deactivated/reordered coupon state cannot silently return a contradictory plan/ledger pair. A regression test covers participation drift caused by a newly dominant exclusive automatic promotion.
+
+Post-change acceptance is green: PHP lint passes on the two changed PHP files; Composer strict/check-lock validation passes; aggregate composer quality passes at 184 tests / 548 assertions with PHPStan clean, PHP-CS-Fixer clean, Playwright 1/1, behavioral evidence regenerated, and Gating 9/9 with zero failures/warnings; fresh Xdebug branch coverage is lines 99.66% (1201/1205), methods 80.15% (101/126), branches 94.48% (874/925); Symfony YAML lint validates both config files and test-container lint passes. Two regression cases cover stacking participation drift and a missing current coupon definition.
+
+The pre-existing dirty .gating owner-tree materialization was present before this execution window and remains deliberately untouched because it is unrelated pre-existing state and destructive cleanup is forbidden by this task. It must not be staged with this RC hardening change.
+
+

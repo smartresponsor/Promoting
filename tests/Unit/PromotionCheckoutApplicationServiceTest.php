@@ -195,6 +195,89 @@ final class PromotionCheckoutApplicationServiceTest extends TestCase
         self::assertSame(1, $replay->ledger->redeemedCount('ONCE'));
     }
 
+    public function testCouponReplayParticipationDriftIsRejected(): void
+    {
+        $couponPromotion = new Promotion(
+            'coupon',
+            'Coupon',
+            new PromotionRule(),
+            PromotionAction::fixed(200),
+            priority: 10,
+            activationMode: PromotionActivationMode::Coupon,
+        );
+        $coupon = new PromotionCoupon('SAVE', 'coupon');
+        $book = new PromotionCouponBook([$coupon]);
+
+        $first = $this->service()->apply(
+            new PromotionCatalog([$couponPromotion]),
+            $book,
+            new PromotionRedemptionLedger(),
+            $this->request(),
+            $this->benefitRequest(),
+            'save',
+            'customer',
+            'order-1',
+        );
+
+        $exclusiveAutomatic = new Promotion(
+            'exclusive-auto',
+            'Exclusive Automatic',
+            new PromotionRule(),
+            PromotionAction::fixed(300),
+            priority: 100,
+            stackingMode: PromotionStackingMode::Exclusive,
+        );
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('Coupon replay no longer matches the current checkout plan.');
+        $this->service()->apply(
+            new PromotionCatalog([$exclusiveAutomatic, $couponPromotion]),
+            $book,
+            $first->ledger,
+            $this->request(),
+            $this->benefitRequest(),
+            'save',
+            'customer',
+            'order-1',
+        );
+    }
+
+    public function testCouponReplayMissingDefinitionIsRejected(): void
+    {
+        $couponPromotion = new Promotion(
+            'coupon',
+            'Coupon',
+            new PromotionRule(),
+            PromotionAction::fixed(200),
+            activationMode: PromotionActivationMode::Coupon,
+        );
+        $coupon = new PromotionCoupon('SAVE', 'coupon');
+
+        $first = $this->service()->apply(
+            new PromotionCatalog([$couponPromotion]),
+            new PromotionCouponBook([$coupon]),
+            new PromotionRedemptionLedger(),
+            $this->request(),
+            $this->benefitRequest(),
+            'save',
+            'customer',
+            'order-1',
+        );
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('Coupon replay no longer matches the current checkout plan.');
+        $this->service()->apply(
+            new PromotionCatalog([$couponPromotion]),
+            new PromotionCouponBook(),
+            $first->ledger,
+            $this->request(),
+            $this->benefitRequest(),
+            'save',
+            'customer',
+            'order-1',
+        );
+    }
+
     public function testInvalidCouponLeavesLedgerUnchanged(): void
     {
         $ledger = new PromotionRedemptionLedger();

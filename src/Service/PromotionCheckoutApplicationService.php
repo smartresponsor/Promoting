@@ -49,6 +49,7 @@ final readonly class PromotionCheckoutApplicationService implements PromotionChe
     ): PromotionCheckoutApplicationResultDTO {
         $planningLedger = $ledger;
         $planningCampaign = $campaign;
+        $existingCouponRedemption = null;
         $existingCampaignSpend = null;
         $campaignUsageRejected = false;
 
@@ -58,9 +59,9 @@ final readonly class PromotionCheckoutApplicationService implements PromotionChe
             }
 
             $couponOrderId = $this->requireOrderId($orderId);
-            $coupon = $couponBook->find($couponCode);
-            if (null !== $coupon && null !== $ledger->findActive($coupon->code, $customerId, $couponOrderId)) {
-                $planningLedger = $ledger->reverse($coupon->code, $customerId, $couponOrderId);
+            $existingCouponRedemption = $ledger->findActive($couponCode, $customerId, $couponOrderId);
+            if (null !== $existingCouponRedemption) {
+                $planningLedger = $ledger->reverse($couponCode, $customerId, $couponOrderId);
             }
         }
 
@@ -175,8 +176,14 @@ final readonly class PromotionCheckoutApplicationService implements PromotionChe
                 || null === $couponResolution->coupon
                 || null === $couponResolution->promotion
             ) {
+                if (null !== $existingCouponRedemption) {
+                    throw new \DomainException('Coupon replay no longer matches the current checkout plan.');
+                }
                 $reasons = [...$reasons, ...$couponResolution->reasons, 'checkout_coupon_not_redeemed'];
             } elseif (!$this->promotionApplied($plan, $couponResolution->promotion->id)) {
+                if (null !== $existingCouponRedemption) {
+                    throw new \DomainException('Coupon replay no longer matches the current checkout plan.');
+                }
                 $reasons[] = 'checkout_coupon_not_reached_by_resolution';
             } else {
                 $redemption = $this->couponService->redeem(
