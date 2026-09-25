@@ -1,6 +1,6 @@
 {
   "name": "promoting/promotion",
-  "description": "SmartResponsor Promoting component for commercial incentive rules, coupons, stacking, limits, and campaigns.",
+  "description": "Promoting component for commercial incentive rules, coupons, stacking, limits, and campaigns.",
   "type": "symfony-bundle",
   "license": "proprietary",
   "minimum-stability": "dev",

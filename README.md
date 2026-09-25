@@ -1,6 +1,6 @@
 # Promoting
 
-Promoting is the SmartResponsor Symfony component for commercial incentive rules, coupons, application methods, stacking, limits, and campaigns.
+Promoting is the Symfony component for commercial incentive rules, coupons, application methods, stacking, limits, and campaigns.
 
 It supports standalone Symfony execution and reusable bundle composition. Product boundaries are in `docs/architecture/001-boundary.adoc`.
 
