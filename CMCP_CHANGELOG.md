@@ -159,3 +159,11 @@ Integrated campaign spend accounting into unified checkout application without t
 
 Verification: PHPUnit 167 tests / 477 assertions green; PHPStan clean; PHP-CS-Fixer clean; behavioral/UI evidence refreshed; Gating 70 rules with 0 failures and 0 warnings. Canon040 remains green at lines 99.5%, methods 80.0%, branches 94.0%. Canon052/053 integration passes on the current packaged Gating contract.
 
+## 2026-09-24 RC hardening and Canon052 closure
+
+Reconnaissance re-read Promoting's boundary, roadmap, capability audit, current runtime/package contour, Objecting/Cruding/Viewing/Interfacing contracts, and normative Canonization rules including Canon021, Canon022, Canon045, Canon052, and Canon053. The market baseline was refreshed against current promotion-engine practice: campaign windows, spend/usage budgets, usage limits, and per-customer scoping remain promotion-domain concerns; pricing, cart/order aggregates, shipping execution, payment, and loyalty remain outside Promoting.
+
+RC-critical work stayed separate from growth. No speculative promotion feature was added. The only factual RC blocker was Canon052: consumer `.gating/` had been polluted by a materialized copy of the Gating owner tree. The snapshot was preserved locally under ignored `var/`, `.gating/` was restored to its artifact-only consumer topology, and its README now states the canonical boundary. Growth candidates such as richer attribute-scoped campaign budgets and operator/admin UX remain post-RC work.
+
+Acceptance evidence: Composer strict/check-lock validation passes; PHPUnit 167 tests / 477 assertions passes; PHPStan has zero errors; PHP-CS-Fixer reports zero fixable files; Playwright 1/1 passes; behavioral/UI evidence regenerates; Gating 70 rules reports 0 failures and 0 warnings, including Canon052 and Canon053. The aggregate `composer quality` wrapper itself exceeded Console MCP's bounded call timeout when re-run, so the same declared constituent scripts were executed independently with successful exit codes. No PHP source changed in this hardening pass.
+
