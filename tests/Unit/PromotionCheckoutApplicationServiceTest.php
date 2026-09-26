@@ -497,6 +497,66 @@ final class PromotionCheckoutApplicationServiceTest extends TestCase
         self::assertSame(0, $result->campaign->spentMinor);
     }
 
+    public function testBenefitOnlyCampaignReplayRejectsParticipationDrift(): void
+    {
+        $campaignPromotion = new Promotion(
+            'campaign-gift',
+            'Campaign Gift',
+            new PromotionRule(),
+            PromotionAction::fixed(0),
+            benefit: PromotionBenefit::freeGift('GIFT'),
+            priority: 100,
+            activationMode: PromotionActivationMode::Campaign,
+        );
+        $campaign = new PromotionCampaign(
+            'campaign',
+            'Campaign',
+            ['campaign-gift'],
+            budgetMinor: 1000,
+            status: PromotionCampaignStatus::Active,
+            applicationLimit: 1,
+        );
+
+        $first = $this->service()->apply(
+            new PromotionCatalog([$campaignPromotion]),
+            new PromotionCouponBook(),
+            new PromotionRedemptionLedger(),
+            $this->request(),
+            $this->benefitRequest(),
+            orderId: 'order-1',
+            campaign: $campaign,
+            campaignSpendLedger: new PromotionCampaignSpendLedger(),
+            campaignUsageLedger: new PromotionCampaignUsageLedger(),
+        );
+
+        self::assertNotNull($first->campaignUsageLedger);
+        self::assertSame(1, $first->campaignUsageLedger->activeCount('campaign'));
+
+        $automatic = new Promotion(
+            'automatic',
+            'Automatic',
+            new PromotionRule(),
+            PromotionAction::fixed(100),
+            stackingMode: PromotionStackingMode::Exclusive,
+            priority: 200,
+        );
+
+        $this->expectException(\DomainException::class);
+        $this->expectExceptionMessage('Campaign usage replay no longer matches the current checkout plan.');
+
+        $this->service()->apply(
+            new PromotionCatalog([$automatic, $campaignPromotion]),
+            new PromotionCouponBook(),
+            new PromotionRedemptionLedger(),
+            $this->request(),
+            $this->benefitRequest(),
+            orderId: 'order-1',
+            campaign: $campaign,
+            campaignSpendLedger: new PromotionCampaignSpendLedger(),
+            campaignUsageLedger: $first->campaignUsageLedger,
+        );
+    }
+
     public function testApplicationLimitedCheckoutRequiresUsageLedger(): void
     {
         $campaign = new PromotionCampaign(

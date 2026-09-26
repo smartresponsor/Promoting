@@ -51,6 +51,7 @@ final readonly class PromotionCheckoutApplicationService implements PromotionChe
         $planningCampaign = $campaign;
         $existingCouponRedemption = null;
         $existingCampaignSpend = null;
+        $existingCampaignUsage = null;
         $campaignUsageRejected = false;
 
         if (null !== $couponCode) {
@@ -78,10 +79,11 @@ final readonly class PromotionCheckoutApplicationService implements PromotionChe
             }
 
             $existingCampaignSpend = $campaignSpendLedger->findActive($campaign->id, $campaignOrderId);
+            $existingCampaignUsage = $campaignUsageLedger?->findActive($campaign->id, $campaignOrderId);
             if (
                 null !== $existingCampaignSpend
                 && null !== $campaignUsageLedger
-                && null === $campaignUsageLedger->findActive($campaign->id, $campaignOrderId)
+                && null === $existingCampaignUsage
             ) {
                 throw new \DomainException('Campaign spend replay is missing its campaign usage record.');
             }
@@ -161,6 +163,10 @@ final readonly class PromotionCheckoutApplicationService implements PromotionChe
             );
             $campaignDiscountAmountMinor = 0;
             $campaignBudgetRejected = true;
+        }
+
+        if (null !== $existingCampaignUsage && !$this->campaignParticipated($plan)) {
+            throw new \DomainException('Campaign usage replay no longer matches the current checkout plan.');
         }
 
         $couponRedemption = null;
