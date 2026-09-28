@@ -4,8 +4,12 @@ declare(strict_types=1);
 
 namespace App\Promoting\Service;
 
+use App\Promoting\DTO\PromotionApplicationResultDTO;
 use App\Promoting\DTO\PromotionBenefitRequestDTO;
+use App\Promoting\DTO\PromotionBenefitResultDTO;
+use App\Promoting\DTO\PromotionCampaignSelectionResultDTO;
 use App\Promoting\DTO\PromotionCheckoutPlanResultDTO;
+use App\Promoting\DTO\PromotionCouponResolutionResultDTO;
 use App\Promoting\DTO\PromotionEvaluationRequestDTO;
 use App\Promoting\ServiceInterface\PromotionBenefitServiceInterface;
 use App\Promoting\ServiceInterface\PromotionCampaignSelectionServiceInterface;
@@ -47,57 +51,131 @@ final readonly class PromotionCheckoutPlanService implements PromotionCheckoutPl
         $candidates = $selection->promotions;
         $reasons = ['automatic_promotions_selected:'.count($candidates)];
 
-        $campaignSelection = null;
-        if (null !== $campaign) {
-            $campaignSelection = $this->campaignSelectionService->select($campaign, $catalog, $request);
-            $reasons = [...$reasons, ...$campaignSelection->reasons];
+        [$campaignSelection, $candidates, $campaignReasons] = $this->includeCampaign(
+            $campaign,
+            $catalog,
+            $request,
+            $candidates,
+        );
+        $reasons = [...$reasons, ...$campaignReasons];
 
-            if ($campaignSelection->available) {
-                foreach ($campaignSelection->promotions as $promotion) {
-                    $candidates = $this->appendUnique($candidates, $promotion);
-                }
-                $reasons[] = 'campaign_promotions_included:'.count($campaignSelection->promotions);
-            } else {
-                $reasons[] = 'campaign_promotions_not_included';
-            }
-        }
-
-        $couponResolution = null;
-        if (null !== $couponCode) {
-            $couponCode = trim($couponCode);
-            if ('' === $couponCode) {
-                throw new \InvalidArgumentException('Coupon code cannot be empty when provided.');
-            }
-            if (null === $customerId || '' === trim($customerId)) {
-                throw new \InvalidArgumentException('Customer id is required when a coupon code is provided.');
-            }
-
-            $couponResolution = $this->couponResolutionService->resolve(
-                $couponBook,
-                $catalog,
-                $ledger,
-                $couponCode,
-                $customerId,
-                $request,
-            );
-            $reasons = [...$reasons, ...$couponResolution->reasons];
-
-            if ($couponResolution->eligible && null !== $couponResolution->promotion) {
-                $candidates = $this->appendUnique($candidates, $couponResolution->promotion);
-                $reasons[] = 'coupon_promotion_included';
-            } else {
-                $reasons[] = 'coupon_promotion_not_included';
-            }
-        }
+        [$couponResolution, $candidates, $couponReasons] = $this->includeCoupon(
+            $couponBook,
+            $catalog,
+            $ledger,
+            $request,
+            $couponCode,
+            $customerId,
+            $candidates,
+        );
+        $reasons = [...$reasons, ...$couponReasons];
 
         $resolution = $this->resolutionService->resolve($candidates, $request);
+        $benefits = $this->resolveBenefits($candidates, $resolution->applications, $benefitRequest);
+
+        return new PromotionCheckoutPlanResultDTO(
+            $resolution,
+            $couponResolution,
+            $campaignSelection,
+            $benefits,
+            [...$reasons, 'promotion_plan_resolved'],
+        );
+    }
+
+    /**
+     * @param list<Promotion> $candidates
+     *
+     * @return array{?PromotionCampaignSelectionResultDTO, list<Promotion>, list<string>}
+     */
+    private function includeCampaign(
+        ?PromotionCampaign $campaign,
+        PromotionCatalog $catalog,
+        PromotionEvaluationRequestDTO $request,
+        array $candidates,
+    ): array {
+        if (null === $campaign) {
+            return [null, $candidates, []];
+        }
+
+        $selection = $this->campaignSelectionService->select($campaign, $catalog, $request);
+        if (!$selection->available) {
+            return [$selection, $candidates, [...$selection->reasons, 'campaign_promotions_not_included']];
+        }
+
+        foreach ($selection->promotions as $promotion) {
+            $candidates = $this->appendUnique($candidates, $promotion);
+        }
+
+        return [
+            $selection,
+            $candidates,
+            [...$selection->reasons, 'campaign_promotions_included:'.count($selection->promotions)],
+        ];
+    }
+
+    /**
+     * @param list<Promotion> $candidates
+     *
+     * @return array{?PromotionCouponResolutionResultDTO, list<Promotion>, list<string>}
+     */
+    private function includeCoupon(
+        PromotionCouponBook $couponBook,
+        PromotionCatalog $catalog,
+        PromotionRedemptionLedger $ledger,
+        PromotionEvaluationRequestDTO $request,
+        ?string $couponCode,
+        ?string $customerId,
+        array $candidates,
+    ): array {
+        if (null === $couponCode) {
+            return [null, $candidates, []];
+        }
+
+        $couponCode = trim($couponCode);
+        if ('' === $couponCode) {
+            throw new \InvalidArgumentException('Coupon code cannot be empty when provided.');
+        }
+        if (null === $customerId || '' === trim($customerId)) {
+            throw new \InvalidArgumentException('Customer id is required when a coupon code is provided.');
+        }
+
+        $resolution = $this->couponResolutionService->resolve(
+            $couponBook,
+            $catalog,
+            $ledger,
+            $couponCode,
+            $customerId,
+            $request,
+        );
+        if (!$resolution->eligible || null === $resolution->promotion) {
+            return [$resolution, $candidates, [...$resolution->reasons, 'coupon_promotion_not_included']];
+        }
+
+        return [
+            $resolution,
+            $this->appendUnique($candidates, $resolution->promotion),
+            [...$resolution->reasons, 'coupon_promotion_included'],
+        ];
+    }
+
+    /**
+     * @param list<Promotion>                     $candidates
+     * @param list<PromotionApplicationResultDTO> $applications
+     *
+     * @return list<PromotionBenefitResultDTO>
+     */
+    private function resolveBenefits(
+        array $candidates,
+        array $applications,
+        PromotionBenefitRequestDTO $benefitRequest,
+    ): array {
         $candidateById = [];
         foreach ($candidates as $promotion) {
             $candidateById[$promotion->id] = $promotion;
         }
 
         $benefits = [];
-        foreach ($resolution->applications as $application) {
+        foreach ($applications as $application) {
             if (!$application->eligible) {
                 continue;
             }
@@ -113,15 +191,7 @@ final readonly class PromotionCheckoutPlanService implements PromotionCheckoutPl
             }
         }
 
-        $reasons[] = 'promotion_plan_resolved';
-
-        return new PromotionCheckoutPlanResultDTO(
-            $resolution,
-            $couponResolution,
-            $campaignSelection,
-            $benefits,
-            $reasons,
-        );
+        return $benefits;
     }
 
     /**

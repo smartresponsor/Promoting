@@ -33,16 +33,10 @@ final readonly class PromotionCouponApplicationService implements PromotionCoupo
         string $orderId,
         PromotionEvaluationRequestDTO $request,
     ): PromotionCouponApplicationResultDTO {
-        $coupon = $couponBook->find($couponCode);
-        $validationLedger = $ledger;
-        if (null !== $coupon && null !== $ledger->findActive($coupon->code, $customerId, $orderId)) {
-            $validationLedger = $ledger->reverse($coupon->code, $customerId, $orderId);
-        }
-
         $resolution = $this->resolutionService->resolve(
             $couponBook,
             $promotionCatalog,
-            $validationLedger,
+            $this->validationLedger($couponBook, $ledger, $couponCode, $customerId, $orderId),
             $couponCode,
             $customerId,
             $request,
@@ -69,8 +63,46 @@ final readonly class PromotionCouponApplicationService implements PromotionCoupo
             );
         }
 
-        $redemption = $this->couponService->redeem(
+        return $this->redeemResolvedCoupon(
             $resolution->coupon,
+            $ledger,
+            $customerId,
+            $orderId,
+            $request,
+            $application,
+            $resolution->reasons,
+        );
+    }
+
+    private function validationLedger(
+        PromotionCouponBook $couponBook,
+        PromotionRedemptionLedger $ledger,
+        string $couponCode,
+        string $customerId,
+        string $orderId,
+    ): PromotionRedemptionLedger {
+        $coupon = $couponBook->find($couponCode);
+        if (null === $coupon || null === $ledger->findActive($coupon->code, $customerId, $orderId)) {
+            return $ledger;
+        }
+
+        return $ledger->reverse($coupon->code, $customerId, $orderId);
+    }
+
+    /**
+     * @param list<string> $resolutionReasons
+     */
+    private function redeemResolvedCoupon(
+        \App\Promoting\ValueObject\PromotionCoupon $coupon,
+        PromotionRedemptionLedger $ledger,
+        string $customerId,
+        string $orderId,
+        PromotionEvaluationRequestDTO $request,
+        \App\Promoting\DTO\PromotionApplicationResultDTO $application,
+        array $resolutionReasons,
+    ): PromotionCouponApplicationResultDTO {
+        $redemption = $this->couponService->redeem(
+            $coupon,
             $ledger,
             $customerId,
             $orderId,
@@ -83,7 +115,7 @@ final readonly class PromotionCouponApplicationService implements PromotionCoupo
                 $ledger,
                 $application,
                 $redemption,
-                [...$resolution->reasons, ...$application->reasons, ...$redemption->reasons, 'coupon_application_not_redeemed'],
+                [...$resolutionReasons, ...$application->reasons, ...$redemption->reasons, 'coupon_application_not_redeemed'],
             );
         }
 
@@ -92,7 +124,7 @@ final readonly class PromotionCouponApplicationService implements PromotionCoupo
             $redemption->ledger,
             $application,
             $redemption,
-            [...$resolution->reasons, ...$application->reasons, ...$redemption->reasons, 'coupon_application_applied'],
+            [...$resolutionReasons, ...$application->reasons, ...$redemption->reasons, 'coupon_application_applied'],
         );
     }
 }

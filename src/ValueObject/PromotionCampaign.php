@@ -23,26 +23,53 @@ final readonly class PromotionCampaign
         public PromotionCampaignStatus $status = PromotionCampaignStatus::Inactive,
         public ?int $applicationLimit = null,
     ) {
+        self::assertIdentity($id, $label);
+        self::assertPromotionIds($promotionIds);
+        self::assertWindow($startsAt, $endsAt);
+        self::assertBudget($budgetMinor, $spentMinor);
+        self::assertApplicationLimit($applicationLimit);
+    }
+
+    private static function assertIdentity(string $id, string $label): void
+    {
         if ('' === trim($id) || '' === trim($label)) {
             throw new \InvalidArgumentException('Campaign id and label cannot be empty.');
         }
+    }
+
+    /** @param list<string> $promotionIds */
+    private static function assertPromotionIds(array $promotionIds): void
+    {
         if ([] === $promotionIds) {
             throw new \InvalidArgumentException('Campaign must group at least one promotion.');
         }
+
         foreach ($promotionIds as $promotionId) {
             if ('' === trim($promotionId)) {
                 throw new \InvalidArgumentException('Campaign promotion ids cannot be empty.');
             }
         }
+    }
+
+    private static function assertWindow(?\DateTimeImmutable $startsAt, ?\DateTimeImmutable $endsAt): void
+    {
         if (null !== $startsAt && null !== $endsAt && $startsAt > $endsAt) {
             throw new \InvalidArgumentException('Campaign start cannot be after campaign end.');
         }
+    }
+
+    private static function assertBudget(?int $budgetMinor, int $spentMinor): void
+    {
         if (null !== $budgetMinor && $budgetMinor < 1) {
             throw new \InvalidArgumentException('Campaign budget must be at least one minor unit.');
         }
         if ($spentMinor < 0 || (null !== $budgetMinor && $spentMinor > $budgetMinor)) {
             throw new \InvalidArgumentException('Campaign spend must stay within budget.');
         }
+    }
+
+    private static function assertApplicationLimit(?int $applicationLimit): void
+    {
         if (null !== $applicationLimit && $applicationLimit < 1) {
             throw new \InvalidArgumentException('Campaign application limit must be at least one.');
         }

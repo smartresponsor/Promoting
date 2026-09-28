@@ -39,36 +39,14 @@ final readonly class PromotionCampaignTransactionService implements PromotionCam
         $this->assertSynchronized($campaign, $ledger);
         $this->assertUsageLedgerAvailable($campaign, $usageLedger);
 
-        $existing = $ledger->findActive($campaign->id, $orderId);
-        if (null !== $existing) {
-            if (null !== $usageLedger && null === $usageLedger->findActive($campaign->id, $orderId)) {
-                throw new \DomainException('Campaign spend replay is missing its campaign usage record.');
-            }
-
-            return new PromotionCampaignTransactionResultDTO(
-                true,
-                $campaign,
-                $ledger,
-                null,
-                $existing,
-                ['campaign_spend_idempotent_replay'],
-                $usageLedger,
-            );
+        $replay = $this->replayResult($campaign, $ledger, $orderId, $usageLedger);
+        if (null !== $replay) {
+            return $replay;
         }
 
-        if (null !== $usageLedger) {
-            $usageValidation = $this->usageService->validate($campaign, $usageLedger, $orderId);
-            if (!$usageValidation->allowed) {
-                return new PromotionCampaignTransactionResultDTO(
-                    false,
-                    $campaign,
-                    $ledger,
-                    null,
-                    null,
-                    [...$usageValidation->reasons, 'campaign_transaction_not_applied'],
-                    $usageLedger,
-                );
-            }
+        $usageRejection = $this->usageRejection($campaign, $ledger, $orderId, $usageLedger);
+        if (null !== $usageRejection) {
+            return $usageRejection;
         }
 
         $application = $this->applicationService->apply($campaign, $catalog, $request);
@@ -84,16 +62,12 @@ final readonly class PromotionCampaignTransactionService implements PromotionCam
             );
         }
 
-        $amountMinor = $application->resolution->totalDiscountAmountMinor;
-        $spend = new PromotionCampaignSpend($campaign->id, $orderId, $amountMinor);
-        $nextUsageLedger = $usageLedger;
-        if (null !== $usageLedger) {
-            $usageMutation = $this->usageService->record($campaign, $usageLedger, $orderId);
-            if (!$usageMutation->changed && null === $usageMutation->usage) {
-                throw new \DomainException('Campaign usage changed between validation and recording.');
-            }
-            $nextUsageLedger = $usageMutation->ledger;
-        }
+        $spend = new PromotionCampaignSpend(
+            $campaign->id,
+            $orderId,
+            $application->resolution->totalDiscountAmountMinor,
+        );
+        $nextUsageLedger = $this->recordUsage($campaign, $usageLedger, $orderId);
 
         return new PromotionCampaignTransactionResultDTO(
             true,
@@ -104,6 +78,74 @@ final readonly class PromotionCampaignTransactionService implements PromotionCam
             [...$application->reasons, 'campaign_spend_recorded'],
             $nextUsageLedger,
         );
+    }
+
+    private function replayResult(
+        PromotionCampaign $campaign,
+        PromotionCampaignSpendLedger $ledger,
+        string $orderId,
+        ?PromotionCampaignUsageLedger $usageLedger,
+    ): ?PromotionCampaignTransactionResultDTO {
+        $existing = $ledger->findActive($campaign->id, $orderId);
+        if (null === $existing) {
+            return null;
+        }
+        if (null !== $usageLedger && null === $usageLedger->findActive($campaign->id, $orderId)) {
+            throw new \DomainException('Campaign spend replay is missing its campaign usage record.');
+        }
+
+        return new PromotionCampaignTransactionResultDTO(
+            true,
+            $campaign,
+            $ledger,
+            null,
+            $existing,
+            ['campaign_spend_idempotent_replay'],
+            $usageLedger,
+        );
+    }
+
+    private function usageRejection(
+        PromotionCampaign $campaign,
+        PromotionCampaignSpendLedger $ledger,
+        string $orderId,
+        ?PromotionCampaignUsageLedger $usageLedger,
+    ): ?PromotionCampaignTransactionResultDTO {
+        if (null === $usageLedger) {
+            return null;
+        }
+
+        $validation = $this->usageService->validate($campaign, $usageLedger, $orderId);
+        if ($validation->allowed) {
+            return null;
+        }
+
+        return new PromotionCampaignTransactionResultDTO(
+            false,
+            $campaign,
+            $ledger,
+            null,
+            null,
+            [...$validation->reasons, 'campaign_transaction_not_applied'],
+            $usageLedger,
+        );
+    }
+
+    private function recordUsage(
+        PromotionCampaign $campaign,
+        ?PromotionCampaignUsageLedger $usageLedger,
+        string $orderId,
+    ): ?PromotionCampaignUsageLedger {
+        if (null === $usageLedger) {
+            return null;
+        }
+
+        $mutation = $this->usageService->record($campaign, $usageLedger, $orderId);
+        if (!$mutation->changed && null === $mutation->usage) {
+            throw new \DomainException('Campaign usage changed between validation and recording.');
+        }
+
+        return $mutation->ledger;
     }
 
     /** Reverses one active campaign order spend idempotently and releases aggregate budget. */

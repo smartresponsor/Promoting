@@ -47,69 +47,167 @@ final readonly class PromotionCheckoutApplicationService implements PromotionChe
         ?PromotionCampaignSpendLedger $campaignSpendLedger = null,
         ?PromotionCampaignUsageLedger $campaignUsageLedger = null,
     ): PromotionCheckoutApplicationResultDTO {
-        $planningLedger = $ledger;
-        $planningCampaign = $campaign;
-        $existingCouponRedemption = null;
-        $existingCampaignSpend = null;
-        $existingCampaignUsage = null;
-        $campaignUsageRejected = false;
+        [
+            $planningLedger,
+            $couponReplay,
+            $planningCampaign,
+            $existingCampaignSpend,
+            $campaignUsageReplay,
+            $campaignUsageRejected,
+        ] = $this->preparePlanningState(
+            $ledger,
+            $couponCode,
+            $customerId,
+            $orderId,
+            $campaign,
+            $campaignSpendLedger,
+            $campaignUsageLedger,
+        );
 
-        if (null !== $couponCode) {
-            if (null === $customerId || '' === trim($customerId)) {
-                throw new \InvalidArgumentException('Customer id is required when a coupon code is provided.');
-            }
+        [$plan, $campaignDiscountAmountMinor, $campaignBudgetRejected] = $this->planCheckout(
+            $catalog, $couponBook, $planningLedger, $request, $benefitRequest,
+            $couponCode, $customerId, $planningCampaign, $existingCampaignSpend,
+            $campaignUsageReplay, $campaignUsageRejected,
+        );
+        [$resultLedger, $couponRedemption, $couponReasons] = $this->applyCouponResult(
+            $ledger, $plan, $couponCode, $customerId, $orderId, $request, $couponReplay,
+        );
+        [$resultCampaign, $resultCampaignSpendLedger, $campaignSpend, $resultCampaignUsageLedger, $campaignReasons]
+            = $this->applyCampaignResult(
+                $campaign, $campaignSpendLedger, $campaignUsageLedger, $existingCampaignSpend,
+                $plan, $campaignDiscountAmountMinor, $campaignBudgetRejected, $campaignUsageRejected, $orderId,
+            );
 
-            $couponOrderId = $this->requireOrderId($orderId);
-            $existingCouponRedemption = $ledger->findActive($couponCode, $customerId, $couponOrderId);
-            if (null !== $existingCouponRedemption) {
-                $planningLedger = $ledger->reverse($couponCode, $customerId, $couponOrderId);
-            }
+        return new PromotionCheckoutApplicationResultDTO(
+            $plan,
+            $resultLedger,
+            $couponRedemption,
+            [...$couponReasons, ...$campaignReasons],
+            $resultCampaign,
+            $resultCampaignSpendLedger,
+            $campaignSpend,
+            $resultCampaignUsageLedger,
+        );
+    }
+
+    /**
+     * @return array{
+     *   PromotionRedemptionLedger,
+     *   bool,
+     *   ?PromotionCampaign,
+     *   ?PromotionCampaignSpend,
+     *   bool,
+     *   bool
+     * }
+     */
+    private function preparePlanningState(
+        PromotionRedemptionLedger $ledger,
+        ?string $couponCode,
+        ?string $customerId,
+        ?string $orderId,
+        ?PromotionCampaign $campaign,
+        ?PromotionCampaignSpendLedger $campaignSpendLedger,
+        ?PromotionCampaignUsageLedger $campaignUsageLedger,
+    ): array {
+        [$planningLedger, $couponReplay] = $this->prepareCouponPlanning(
+            $ledger,
+            $couponCode,
+            $customerId,
+            $orderId,
+        );
+        [$planningCampaign, $existingSpend, $usageReplay, $usageRejected] = $this->prepareCampaignPlanning(
+            $campaign,
+            $campaignSpendLedger,
+            $campaignUsageLedger,
+            $orderId,
+        );
+
+        return [$planningLedger, $couponReplay, $planningCampaign, $existingSpend, $usageReplay, $usageRejected];
+    }
+
+    /** @return array{PromotionRedemptionLedger, bool} */
+    private function prepareCouponPlanning(
+        PromotionRedemptionLedger $ledger,
+        ?string $couponCode,
+        ?string $customerId,
+        ?string $orderId,
+    ): array {
+        if (null === $couponCode) {
+            return [$ledger, false];
+        }
+        if (null === $customerId || '' === trim($customerId)) {
+            throw new \InvalidArgumentException('Customer id is required when a coupon code is provided.');
         }
 
-        if (null !== $campaign) {
-            $campaignOrderId = $this->requireOrderId($orderId);
-            if (null === $campaignSpendLedger) {
-                throw new \InvalidArgumentException('Campaign spend ledger is required when a campaign is provided.');
-            }
-            if ($campaign->spentMinor !== $campaignSpendLedger->activeSpendForCampaign($campaign->id)) {
-                throw new \DomainException('Campaign spend aggregate does not match campaign spend ledger.');
-            }
-            if (null !== $campaign->applicationLimit && null === $campaignUsageLedger) {
-                throw new \InvalidArgumentException('Campaign usage ledger is required when an application limit is configured.');
+        $orderId = $this->requireOrderId($orderId);
+        $existing = $ledger->findActive($couponCode, $customerId, $orderId);
+
+        return [
+            null === $existing ? $ledger : $ledger->reverse($couponCode, $customerId, $orderId),
+            null !== $existing,
+        ];
+    }
+
+    /** @return array{?PromotionCampaign, ?PromotionCampaignSpend, bool, bool} */
+    private function prepareCampaignPlanning(
+        ?PromotionCampaign $campaign,
+        ?PromotionCampaignSpendLedger $spendLedger,
+        ?PromotionCampaignUsageLedger $usageLedger,
+        ?string $orderId,
+    ): array {
+        if (null === $campaign) {
+            if (null !== $spendLedger || null !== $usageLedger) {
+                throw new \InvalidArgumentException('Campaign context is required when a campaign ledger is provided.');
             }
 
-            $existingCampaignSpend = $campaignSpendLedger->findActive($campaign->id, $campaignOrderId);
-            $existingCampaignUsage = $campaignUsageLedger?->findActive($campaign->id, $campaignOrderId);
-            if (
-                null !== $existingCampaignSpend
-                && null !== $campaignUsageLedger
-                && null === $existingCampaignUsage
-            ) {
-                throw new \DomainException('Campaign spend replay is missing its campaign usage record.');
-            }
-            if (null !== $existingCampaignSpend) {
-                $planningCampaign = $this->campaignService->releaseSpend(
-                    $campaign,
-                    $existingCampaignSpend->amountMinor,
-                );
-            }
-
-            if (null !== $campaignUsageLedger) {
-                $usageValidation = $this->usageService->validate(
-                    $campaign,
-                    $campaignUsageLedger,
-                    $campaignOrderId,
-                );
-                if (!$usageValidation->allowed) {
-                    $campaignUsageRejected = true;
-                    $planningCampaign = null;
-                }
-            }
-        } elseif (null !== $campaignSpendLedger || null !== $campaignUsageLedger) {
-            throw new \InvalidArgumentException('Campaign context is required when a campaign ledger is provided.');
+            return [null, null, false, false];
+        }
+        if (null === $spendLedger) {
+            throw new \InvalidArgumentException('Campaign spend ledger is required when a campaign is provided.');
+        }
+        if ($campaign->spentMinor !== $spendLedger->activeSpendForCampaign($campaign->id)) {
+            throw new \DomainException('Campaign spend aggregate does not match campaign spend ledger.');
+        }
+        if (null !== $campaign->applicationLimit && null === $usageLedger) {
+            throw new \InvalidArgumentException('Campaign usage ledger is required when an application limit is configured.');
         }
 
-        $plan = $this->planService->plan(
+        $orderId = $this->requireOrderId($orderId);
+        $existingSpend = $spendLedger->findActive($campaign->id, $orderId);
+        $existingUsage = $usageLedger?->findActive($campaign->id, $orderId);
+        if (null !== $existingSpend && null !== $usageLedger && null === $existingUsage) {
+            throw new \DomainException('Campaign spend replay is missing its campaign usage record.');
+        }
+
+        $planningCampaign = null === $existingSpend
+            ? $campaign
+            : $this->campaignService->releaseSpend($campaign, $existingSpend->amountMinor);
+        $usageRejected = null !== $usageLedger
+            && !$this->usageService->validate($campaign, $usageLedger, $orderId)->allowed;
+
+        return [
+            $usageRejected ? null : $planningCampaign,
+            $existingSpend,
+            null !== $existingUsage,
+            $usageRejected,
+        ];
+    }
+
+    /** @return array{PromotionCheckoutPlanResultDTO, int, bool} */
+    private function planCheckout(
+        PromotionCatalog $catalog,
+        PromotionCouponBook $couponBook,
+        PromotionRedemptionLedger $planningLedger,
+        PromotionEvaluationRequestDTO $request,
+        PromotionBenefitRequestDTO $benefitRequest,
+        ?string $couponCode,
+        ?string $customerId,
+        ?PromotionCampaign $planningCampaign,
+        ?PromotionCampaignSpend $existingCampaignSpend,
+        bool $campaignUsageReplay,
+        bool $campaignUsageRejected,
+    ): array {
+        $plan = $this->baseCheckoutPlan(
             $catalog,
             $couponBook,
             $planningLedger,
@@ -118,149 +216,209 @@ final readonly class PromotionCheckoutApplicationService implements PromotionChe
             $couponCode,
             $customerId,
             $planningCampaign,
+            $campaignUsageRejected,
         );
+        $amountMinor = $this->campaignDiscountAmount($plan);
+        $this->assertCampaignReplaySpendMatches($existingCampaignSpend, $amountMinor);
 
-        if ($campaignUsageRejected) {
-            $plan = new PromotionCheckoutPlanResultDTO(
-                $plan->resolution,
-                $plan->couponResolution,
-                $plan->campaignSelection,
-                $plan->benefits,
-                [...$plan->reasons, 'checkout_campaign_application_limit_reached'],
-            );
+        if (!$this->campaignBudgetExceeded($planningCampaign, $amountMinor)) {
+            $this->assertCampaignUsageReplayMatches($campaignUsageReplay, $plan);
+
+            return [$plan, $amountMinor, false];
         }
 
-        $campaignDiscountAmountMinor = $this->campaignDiscountAmount($plan);
-        if (
-            null !== $existingCampaignSpend
-            && $existingCampaignSpend->amountMinor !== $campaignDiscountAmountMinor
-        ) {
+        $fallback = $this->planService->plan(
+            $catalog, $couponBook, $planningLedger, $request, $benefitRequest, $couponCode, $customerId,
+        );
+        $plan = new PromotionCheckoutPlanResultDTO(
+            $fallback->resolution,
+            $fallback->couponResolution,
+            $plan->campaignSelection,
+            $fallback->benefits,
+            [...$fallback->reasons, 'checkout_campaign_budget_would_exceed'],
+        );
+        $this->assertCampaignUsageReplayMatches($campaignUsageReplay, $plan);
+
+        return [$plan, 0, true];
+    }
+
+    private function baseCheckoutPlan(
+        PromotionCatalog $catalog,
+        PromotionCouponBook $couponBook,
+        PromotionRedemptionLedger $ledger,
+        PromotionEvaluationRequestDTO $request,
+        PromotionBenefitRequestDTO $benefitRequest,
+        ?string $couponCode,
+        ?string $customerId,
+        ?PromotionCampaign $campaign,
+        bool $usageRejected,
+    ): PromotionCheckoutPlanResultDTO {
+        $plan = $this->planService->plan(
+            $catalog, $couponBook, $ledger, $request, $benefitRequest, $couponCode, $customerId, $campaign,
+        );
+        if (!$usageRejected) {
+            return $plan;
+        }
+
+        return new PromotionCheckoutPlanResultDTO(
+            $plan->resolution,
+            $plan->couponResolution,
+            $plan->campaignSelection,
+            $plan->benefits,
+            [...$plan->reasons, 'checkout_campaign_application_limit_reached'],
+        );
+    }
+
+    private function assertCampaignReplaySpendMatches(
+        ?PromotionCampaignSpend $existingSpend,
+        int $amountMinor,
+    ): void {
+        if (null !== $existingSpend && $existingSpend->amountMinor !== $amountMinor) {
             throw new \DomainException('Campaign replay spend does not match the current checkout plan.');
         }
+    }
 
-        $campaignBudgetRejected = false;
-        if (
-            null !== $planningCampaign
-            && null !== $planningCampaign->budgetMinor
-            && $planningCampaign->spentMinor + $campaignDiscountAmountMinor > $planningCampaign->budgetMinor
-        ) {
-            $campaignPlan = $plan;
-            $fallback = $this->planService->plan(
-                $catalog,
-                $couponBook,
-                $planningLedger,
-                $request,
-                $benefitRequest,
-                $couponCode,
-                $customerId,
-            );
-            $plan = new PromotionCheckoutPlanResultDTO(
-                $fallback->resolution,
-                $fallback->couponResolution,
-                $campaignPlan->campaignSelection,
-                $fallback->benefits,
-                [...$fallback->reasons, 'checkout_campaign_budget_would_exceed'],
-            );
-            $campaignDiscountAmountMinor = 0;
-            $campaignBudgetRejected = true;
-        }
-
-        if (null !== $existingCampaignUsage && !$this->campaignParticipated($plan)) {
+    private function assertCampaignUsageReplayMatches(
+        bool $usageReplay,
+        PromotionCheckoutPlanResultDTO $plan,
+    ): void {
+        if ($usageReplay && !$this->campaignParticipated($plan)) {
             throw new \DomainException('Campaign usage replay no longer matches the current checkout plan.');
         }
+    }
 
-        $couponRedemption = null;
-        $resultLedger = $ledger;
-        $reasons = [];
+    private function campaignBudgetExceeded(?PromotionCampaign $campaign, int $amountMinor): bool
+    {
+        return null !== $campaign
+            && null !== $campaign->budgetMinor
+            && $campaign->spentMinor + $amountMinor > $campaign->budgetMinor;
+    }
 
+    /**
+     * @return array{PromotionRedemptionLedger, ?\App\Promoting\DTO\PromotionCouponRedemptionResultDTO, list<string>}
+     */
+    private function applyCouponResult(
+        PromotionRedemptionLedger $ledger,
+        PromotionCheckoutPlanResultDTO $plan,
+        ?string $couponCode,
+        ?string $customerId,
+        ?string $orderId,
+        PromotionEvaluationRequestDTO $request,
+        bool $couponReplay,
+    ): array {
         if (null === $couponCode || null === $plan->couponResolution) {
-            $reasons[] = 'checkout_application_completed_without_coupon';
-        } else {
-            $couponResolution = $plan->couponResolution;
-            if (
-                !$couponResolution->eligible
-                || null === $couponResolution->coupon
-                || null === $couponResolution->promotion
-            ) {
-                if (null !== $existingCouponRedemption) {
-                    throw new \DomainException('Coupon replay no longer matches the current checkout plan.');
-                }
-                $reasons = [...$reasons, ...$couponResolution->reasons, 'checkout_coupon_not_redeemed'];
-            } elseif (!$this->promotionApplied($plan, $couponResolution->promotion->id)) {
-                if (null !== $existingCouponRedemption) {
-                    throw new \DomainException('Coupon replay no longer matches the current checkout plan.');
-                }
-                $reasons[] = 'checkout_coupon_not_reached_by_resolution';
-            } else {
-                $redemption = $this->couponService->redeem(
-                    $couponResolution->coupon,
-                    $ledger,
-                    $customerId,
-                    $this->requireOrderId($orderId),
-                    $request->at,
-                );
-                $couponRedemption = $redemption;
-                $resultLedger = $redemption->ledger;
-                $reasons = [
-                    ...$reasons,
-                    ...$redemption->reasons,
-                    $redemption->redeemed
-                        ? 'checkout_coupon_redeemed'
-                        : 'checkout_coupon_redemption_failed',
-                ];
-            }
+            return [$ledger, null, ['checkout_application_completed_without_coupon']];
         }
 
-        $resultCampaign = $campaign;
-        $resultCampaignSpendLedger = $campaignSpendLedger;
-        $resultCampaignUsageLedger = $campaignUsageLedger;
-        $campaignSpend = null;
-
-        if (null !== $campaign) {
-            $campaignParticipated = $this->campaignParticipated($plan);
-            if ($campaignUsageRejected) {
-                $reasons[] = 'checkout_campaign_usage_not_recorded_limit';
-            } elseif ($campaignParticipated && null !== $campaignUsageLedger) {
-                $usageMutation = $this->usageService->record(
-                    $campaign,
-                    $campaignUsageLedger,
-                    $this->requireOrderId($orderId),
-                );
-                $resultCampaignUsageLedger = $usageMutation->ledger;
-                $reasons = [...$reasons, ...$usageMutation->reasons];
+        $resolution = $plan->couponResolution;
+        if (!$resolution->eligible || null === $resolution->coupon || null === $resolution->promotion) {
+            if ($couponReplay) {
+                throw new \DomainException('Coupon replay no longer matches the current checkout plan.');
             }
 
-            if ($campaignBudgetRejected) {
-                $reasons[] = 'checkout_campaign_spend_not_recorded_budget';
-            } elseif (null === $plan->campaignSelection || !$plan->campaignSelection->available) {
-                $reasons[] = 'checkout_campaign_not_applied';
-            } elseif ($campaignDiscountAmountMinor < 1) {
-                $reasons[] = 'checkout_campaign_no_monetary_spend';
-            } elseif (null !== $existingCampaignSpend) {
-                $campaignSpend = $existingCampaignSpend;
-                $reasons[] = 'campaign_spend_idempotent_replay';
-            } else {
-                $campaignSpend = new PromotionCampaignSpend(
-                    $campaign->id,
-                    $this->requireOrderId($orderId),
-                    $campaignDiscountAmountMinor,
-                );
-                $resultCampaign = $this->campaignService->recordSpend($campaign, $campaignDiscountAmountMinor);
-                $resultCampaignSpendLedger = $campaignSpendLedger->record($campaignSpend);
-                $reasons[] = 'checkout_campaign_spend_recorded';
+            return [$ledger, null, [...$resolution->reasons, 'checkout_coupon_not_redeemed']];
+        }
+        if (!$this->promotionApplied($plan, $resolution->promotion->id)) {
+            if ($couponReplay) {
+                throw new \DomainException('Coupon replay no longer matches the current checkout plan.');
             }
+
+            return [$ledger, null, ['checkout_coupon_not_reached_by_resolution']];
         }
 
-        return new PromotionCheckoutApplicationResultDTO(
-            $plan,
-            $resultLedger,
-            $couponRedemption,
-            $reasons,
-            $resultCampaign,
-            $resultCampaignSpendLedger,
-            $campaignSpend,
-            $resultCampaignUsageLedger,
+        $redemption = $this->couponService->redeem(
+            $resolution->coupon,
+            $ledger,
+            (string) $customerId,
+            $this->requireOrderId($orderId),
+            $request->at,
         );
+
+        return [
+            $redemption->ledger,
+            $redemption,
+            [
+                ...$redemption->reasons,
+                $redemption->redeemed ? 'checkout_coupon_redeemed' : 'checkout_coupon_redemption_failed',
+            ],
+        ];
+    }
+
+    /**
+     * @return array{?PromotionCampaign, ?PromotionCampaignSpendLedger, ?PromotionCampaignSpend, ?PromotionCampaignUsageLedger, list<string>}
+     */
+    private function applyCampaignResult(
+        ?PromotionCampaign $campaign,
+        ?PromotionCampaignSpendLedger $spendLedger,
+        ?PromotionCampaignUsageLedger $usageLedger,
+        ?PromotionCampaignSpend $existingSpend,
+        PromotionCheckoutPlanResultDTO $plan,
+        int $discountAmountMinor,
+        bool $budgetRejected,
+        bool $usageRejected,
+        ?string $orderId,
+    ): array {
+        if (null === $campaign) {
+            return [null, $spendLedger, null, $usageLedger, []];
+        }
+
+        [$resultUsageLedger, $reasons] = $this->recordCampaignUsage(
+            $campaign,
+            $usageLedger,
+            $plan,
+            $usageRejected,
+            $orderId,
+        );
+
+        if ($budgetRejected) {
+            return [$campaign, $spendLedger, null, $resultUsageLedger, [...$reasons, 'checkout_campaign_spend_not_recorded_budget']];
+        }
+        if (null === $plan->campaignSelection || !$plan->campaignSelection->available) {
+            return [$campaign, $spendLedger, null, $resultUsageLedger, [...$reasons, 'checkout_campaign_not_applied']];
+        }
+        if ($discountAmountMinor < 1) {
+            return [$campaign, $spendLedger, null, $resultUsageLedger, [...$reasons, 'checkout_campaign_no_monetary_spend']];
+        }
+        if (null !== $existingSpend) {
+            return [$campaign, $spendLedger, $existingSpend, $resultUsageLedger, [...$reasons, 'campaign_spend_idempotent_replay']];
+        }
+        if (null === $spendLedger) {
+            throw new \LogicException('Campaign spend ledger must be available for campaign application.');
+        }
+
+        $spend = new PromotionCampaignSpend(
+            $campaign->id,
+            $this->requireOrderId($orderId),
+            $discountAmountMinor,
+        );
+
+        return [
+            $this->campaignService->recordSpend($campaign, $discountAmountMinor),
+            $spendLedger->record($spend),
+            $spend,
+            $resultUsageLedger,
+            [...$reasons, 'checkout_campaign_spend_recorded'],
+        ];
+    }
+
+    /** @return array{?PromotionCampaignUsageLedger, list<string>} */
+    private function recordCampaignUsage(
+        PromotionCampaign $campaign,
+        ?PromotionCampaignUsageLedger $usageLedger,
+        PromotionCheckoutPlanResultDTO $plan,
+        bool $usageRejected,
+        ?string $orderId,
+    ): array {
+        if ($usageRejected) {
+            return [$usageLedger, ['checkout_campaign_usage_not_recorded_limit']];
+        }
+        if (null === $usageLedger || !$this->campaignParticipated($plan)) {
+            return [$usageLedger, []];
+        }
+
+        $mutation = $this->usageService->record($campaign, $usageLedger, $this->requireOrderId($orderId));
+
+        return [$mutation->ledger, $mutation->reasons];
     }
 
     private function requireOrderId(?string $orderId): string

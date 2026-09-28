@@ -21,38 +21,98 @@ final class PromotionCouponService implements PromotionCouponServiceInterface
         string $customerId,
         ?\DateTimeImmutable $at = null,
     ): PromotionCouponValidationDTO {
-        $trimmedCustomerId = trim($customerId);
-        if ('' === $trimmedCustomerId) {
-            throw new \InvalidArgumentException('Customer id cannot be empty.');
-        }
+        $this->assertCustomerId($customerId);
+
         if (PromotionCouponStatus::Active !== $coupon->status) {
             return new PromotionCouponValidationDTO(false, ['coupon_inactive']);
         }
 
         $reasons = ['coupon_active'];
+        $audience = $this->validateAudience($coupon, $customerId, $reasons);
+        if (null !== $audience) {
+            return $audience;
+        }
 
+        $time = $this->validateTimeWindow($coupon, $at, $reasons);
+        if ($time instanceof PromotionCouponValidationDTO) {
+            return $time;
+        }
+        $reasons = $time;
+
+        $limits = $this->validateLimits($coupon, $ledger, $customerId, $reasons);
+        if ($limits instanceof PromotionCouponValidationDTO) {
+            return $limits;
+        }
+
+        return new PromotionCouponValidationDTO(true, [...$limits, 'coupon_valid']);
+    }
+
+    private function assertCustomerId(string $customerId): void
+    {
+        if ('' === trim($customerId)) {
+            throw new \InvalidArgumentException('Customer id cannot be empty.');
+        }
+    }
+
+    /**
+     * @param list<string> $reasons
+     */
+    private function validateAudience(
+        PromotionCoupon $coupon,
+        string $customerId,
+        array &$reasons,
+    ): ?PromotionCouponValidationDTO {
         if (null !== $coupon->customerId && $coupon->customerId !== $customerId) {
             return new PromotionCouponValidationDTO(false, [...$reasons, 'coupon_customer_mismatch']);
         }
+
         $reasons[] = null === $coupon->customerId ? 'coupon_audience_unrestricted' : 'coupon_customer_matched';
 
-        if (null !== $coupon->issuedAt || null !== $coupon->startsAt || null !== $coupon->endsAt) {
-            if (null === $at) {
-                return new PromotionCouponValidationDTO(false, [...$reasons, 'coupon_time_context_missing']);
-            }
-            if (null !== $coupon->issuedAt && $at < $coupon->issuedAt) {
-                return new PromotionCouponValidationDTO(false, [...$reasons, 'coupon_not_issued_yet']);
-            }
-            if (null !== $coupon->startsAt && $at < $coupon->startsAt) {
-                return new PromotionCouponValidationDTO(false, [...$reasons, 'coupon_not_started']);
-            }
-            $reasons[] = 'coupon_start_window_met';
-            if (null !== $coupon->endsAt && $at > $coupon->endsAt) {
-                return new PromotionCouponValidationDTO(false, [...$reasons, 'coupon_ended']);
-            }
-            $reasons[] = 'coupon_end_window_met';
+        return null;
+    }
+
+    /**
+     * @param list<string> $reasons
+     *
+     * @return list<string>|PromotionCouponValidationDTO
+     */
+    private function validateTimeWindow(
+        PromotionCoupon $coupon,
+        ?\DateTimeImmutable $at,
+        array $reasons,
+    ): array|PromotionCouponValidationDTO {
+        if (null === $coupon->issuedAt && null === $coupon->startsAt && null === $coupon->endsAt) {
+            return $reasons;
+        }
+        if (null === $at) {
+            return new PromotionCouponValidationDTO(false, [...$reasons, 'coupon_time_context_missing']);
+        }
+        if (null !== $coupon->issuedAt && $at < $coupon->issuedAt) {
+            return new PromotionCouponValidationDTO(false, [...$reasons, 'coupon_not_issued_yet']);
+        }
+        if (null !== $coupon->startsAt && $at < $coupon->startsAt) {
+            return new PromotionCouponValidationDTO(false, [...$reasons, 'coupon_not_started']);
         }
 
+        $reasons[] = 'coupon_start_window_met';
+        if (null !== $coupon->endsAt && $at > $coupon->endsAt) {
+            return new PromotionCouponValidationDTO(false, [...$reasons, 'coupon_ended']);
+        }
+
+        return [...$reasons, 'coupon_end_window_met'];
+    }
+
+    /**
+     * @param list<string> $reasons
+     *
+     * @return list<string>|PromotionCouponValidationDTO
+     */
+    private function validateLimits(
+        PromotionCoupon $coupon,
+        PromotionRedemptionLedger $ledger,
+        string $customerId,
+        array $reasons,
+    ): array|PromotionCouponValidationDTO {
         if (null !== $coupon->usageLimit && $ledger->redeemedCount($coupon->code) >= $coupon->usageLimit) {
             return new PromotionCouponValidationDTO(false, [...$reasons, 'coupon_usage_limit_reached']);
         }
@@ -64,10 +124,8 @@ final class PromotionCouponService implements PromotionCouponServiceInterface
         ) {
             return new PromotionCouponValidationDTO(false, [...$reasons, 'coupon_customer_limit_reached']);
         }
-        $reasons[] = 'coupon_customer_limit_available';
-        $reasons[] = 'coupon_valid';
 
-        return new PromotionCouponValidationDTO(true, $reasons);
+        return [...$reasons, 'coupon_customer_limit_available'];
     }
 
     public function redeem(

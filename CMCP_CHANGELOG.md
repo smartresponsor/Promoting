@@ -205,4 +205,21 @@ The recurring consumer `.gating/` contamination was traced to the external opera
 
 This directly conflicts with Canon052 and the current Gating contract that consumer `.gating/` is artifact-only. The scanner also excludes `.gating/**` from repository fingerprints, so the mutation is masked from its own repository-change detection. The correct external repair is to execute the canonical sibling `Gating/bin/gating` directly against each repository via `--target`, using `Gating/.gating` only as the canonical policy/severity root, in both primary scan and revalidation paths. Promoting does not own CanonScanning, so this run records the blocker but does not patch that external operational component under the Promoting workspace authority.
 
+## 2026-09-28 Inspecting complexity remediation
+
+Baseline: master at `2379073493bebb60548c5da639776d1d71bcc7da`, synchronized with `origin/master`. Pre-existing materialized `.gating/` changes are unrelated/protected and were not cleaned, reset, staged, or absorbed.
+
+Read/verified for this pass: Promoting boundary/README/Composer/gating profile and the RED Inspecting report from `20260928-030002`; Objecting, Cruding, Viewing, Interfacing dependency contour; Canonization Canon000, Canon007, Canon012, Canon018, Canon021, Canon022, Canon052, Canon053; Gating enforcement contour. Target mapping remains `promoting/promotion` -> `App\\Promoting\\` -> `Promotion*`; no generic CRUD ownership was introduced; platform baseline dependencies remain direct symlinked development dependencies.
+
+Selected RC-critical workstream: behavior-preserving decomposition of the eight Inspecting structural findings, prioritizing checkout application complexity 44. Growth work such as richer targeting/segmentation, fraud/velocity controls, omnichannel predicates, and business-authored rule UX remains post-RC.
+
+Implemented in this pass:
+- decomposed checkout application orchestration into coupon planning, campaign planning, unified-plan, coupon-effect, campaign-effect, and campaign-usage phases;
+- decomposed checkout planning into campaign inclusion, coupon inclusion, and benefit resolution;
+- decomposed coupon validation into identity, audience, time-window, and limit checks;
+- decomposed coupon application replay/redemption phases;
+- decomposed campaign transaction replay/usage phases;
+- decomposed campaign constructor invariants into focused validators.
+
+Verification after remediation: PHP syntax lint PASS for all six changed PHP files; `composer validate --strict --check-lock` PASS; PHPUnit 185/185 tests with 552 assertions PASS; PHPStan PASS with zero errors; PHP-CS-Fixer dry-run PASS; Gating PASS with 9 rules, zero failures/warnings/suppressed/skipped; Playwright standalone runtime smoke PASS (1/1); `git diff --check` PASS. Structural self-check shows none of the changed methods at >=60 physical lines or the prior high branch-count envelope. Fresh Inspecting remains unresolved: the long post-mutation invocation exceeded the MCP call window, and a bounded 30-second retry returned `INSPECTING_FAILED` without stdout/stderr. Therefore this remediation is committed as verified code improvement but the Inspecting front is not declared GREEN until a fresh report is obtained for the current repository fingerprint.
 
