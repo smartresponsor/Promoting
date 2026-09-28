@@ -238,3 +238,11 @@ Remediation:
 
 Verification after the follow-up: PHPUnit 185/185 tests with 552 assertions PASS; PHPStan PASS with zero errors; PHP-CS-Fixer PASS; Gating PASS with zero failures/warnings; `git diff --check` PASS. The standalone Inspecting capability is currently failing before persisting a new report, so no new Inspecting GREEN claim is made yet. The code is integrated only after deterministic gates are green; Inspecting will be retried against the committed fingerprint.
 
+## 2026-09-28 RC validation and Inspecting transport diagnosis
+
+Post-remediation read-only RC validation on committed `b1e03444047c903ae737689962398c675b173996` returned `rc_diagnostic_green` with zero blockers, zero warnings, and zero canon issues. The validator independently re-ran Composer validation, PHPStan, PHPUnit (185/185 tests, 552 assertions), and behavioral/UI coverage generation; all passed.
+
+The remaining acceptance tail is isolated to the standalone Inspecting transport rather than Promoting code. Console MCP exposes `console.write.repo.quality.inspect` as a synchronous supervised `php bin/inspecting inspect <target>` process. Historical successful Promoting inspection took roughly 75 seconds and recorded Semgrep's internal 60-second analyzer timeout as a non-fatal `analyzerFailures.semgrep`, while still persisting PHPStan/php-structure results. Current calls fail at the MCP/tool-handler boundary before a new report is persisted. Console MCP runtime/watchdog diagnostics are healthy with normal resource pressure, so the failure is not attributable to repository runtime pressure.
+
+No repository-local workaround was retained: the generic asynchronous PowerShell runner only allows scripts from `tool/` or `bin/`, and adding an Inspecting orchestration wrapper to Promoting would violate the external verification ownership boundary. The appropriate platform repair is a durable asynchronous Inspecting execution contract (start/status/output or equivalent reuse of the shared async command runner). Until fresh Inspecting evidence is persisted for the current fingerprint, the Inspecting front is not claimed GREEN despite the independently green RC diagnostic.
+
