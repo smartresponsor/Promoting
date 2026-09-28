@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7cddef2f9f1649ee60103237d69932ae",
+    "content-hash": "2bc0544eed8993c09151e6ed26473184",
     "packages": [
         {
             "name": "collectioning/collection",
@@ -12,7 +12,7 @@
             "dist": {
                 "type": "path",
                 "url": "../Collectioning",
-                "reference": "8d0bf8ed56c06ff84d54a99abaadcaab55da11c2"
+                "reference": "82194f4f9f67bb53a2536c5a15e1d924f0ec8991"
             },
             "require": {
                 "doctrine/doctrine-bundle": "^3.2",
@@ -75,7 +75,7 @@
                 ]
             },
             "license": [
-                "proprietary"
+                "PolyForm-Noncommercial-1.0.0"
             ],
             "description": "Symfony collection-query primitive for filtering, sorting, pagination, projection, counts and realtime collection invalidation.",
             "transport-options": {
@@ -166,12 +166,13 @@
             "dist": {
                 "type": "path",
                 "url": "../Cruding",
-                "reference": "5e4236178d21f0c7e934147df570ad95fd57e4d9"
+                "reference": "1c291877721e7db57be69e5f9577534b023c279c"
             },
             "require": {
                 "collectioning/collection": "dev-master",
                 "doctrine/doctrine-bundle": "^3.2",
                 "doctrine/orm": "^3.0",
+                "failing/failure": "dev-master",
                 "php": "^8.4",
                 "symfony/config": "^8.1",
                 "symfony/dependency-injection": "^8.1",
@@ -218,6 +219,9 @@
                 "test:coverage": [
                     "@php -r \"if (!is_dir('var/coverage')) { mkdir('var/coverage', 0777, true); }\"",
                     "@php -d xdebug.mode=coverage vendor/bin/phpunit --path-coverage --coverage-text=var/coverage/summary.txt"
+                ],
+                "validate:prod": [
+                    "composer validate --strict --no-check-all composer.prod.json"
                 ],
                 "cs:check": [
                     "@php vendor/bin/php-cs-fixer fix --dry-run --diff"
@@ -275,7 +279,7 @@
                 ]
             },
             "license": [
-                "proprietary"
+                "PolyForm-Noncommercial-1.0.0"
             ],
             "description": "Universal CRUD route processor bundle for Symfony host applications.",
             "transport-options": {
@@ -1316,12 +1320,80 @@
             "time": "2026-09-17T19:03:00+00:00"
         },
         {
+            "name": "failing/failure",
+            "version": "dev-master",
+            "dist": {
+                "type": "path",
+                "url": "../Failing",
+                "reference": "9bc085b96f2ebc670202849da85c37f5bd8a7c6c"
+            },
+            "require": {
+                "php": "^8.4",
+                "symfony/config": "^8.1",
+                "symfony/dependency-injection": "^8.1",
+                "symfony/event-dispatcher": "^8.1",
+                "symfony/http-foundation": "^8.1",
+                "symfony/http-kernel": "^8.1"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.95",
+                "phpstan/phpstan": "^2.0",
+                "phpunit/phpunit": "^12.0"
+            },
+            "type": "symfony-bundle",
+            "autoload": {
+                "psr-4": {
+                    "App\\Failing\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "App\\Failing\\Tests\\": "tests/"
+                }
+            },
+            "scripts": {
+                "guard:architecture": [
+                    "@php tools/guard/failing-anti-wheel-guard.php"
+                ],
+                "validate:prod": [
+                    "composer validate --strict --no-check-all composer.prod.json"
+                ],
+                "cs:check": [
+                    "@php vendor/bin/php-cs-fixer fix --dry-run --diff"
+                ],
+                "cs:fix": [
+                    "@php vendor/bin/php-cs-fixer fix"
+                ],
+                "test": [
+                    "phpunit"
+                ],
+                "phpstan": [
+                    "@php vendor/bin/phpstan analyse src tests --level=max"
+                ],
+                "check:failing": [
+                    "@validate:prod",
+                    "@guard:architecture",
+                    "@cs:check",
+                    "@phpstan",
+                    "@test"
+                ]
+            },
+            "license": [
+                "PolyForm-Noncommercial-1.0.0"
+            ],
+            "description": "Consumer-agnostic failure contract, runtime inventory, and RFC 9457 integration for Symfony applications.",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
             "name": "interfacing/interface",
             "version": "dev-master",
             "dist": {
                 "type": "path",
                 "url": "../Interfacing",
-                "reference": "af859b3f475bb2b6e2731b5c64e83e47442c9ddd"
+                "reference": "0f3353dc5a4d06bd2c2b04fa46b918e8e42f4c84"
             },
             "require": {
                 "collectioning/collection": "dev-master",
@@ -1461,7 +1533,7 @@
                 ]
             },
             "license": [
-                "proprietary"
+                "PolyForm-Noncommercial-1.0.0"
             ],
             "description": "Interfacing Symfony package bundle",
             "transport-options": {
@@ -1475,7 +1547,7 @@
             "dist": {
                 "type": "path",
                 "url": "../Objecting",
-                "reference": "8d30b78e3cde74885c0a029f00b850d2abd42311"
+                "reference": "4f25833b58ac64fb61b9a3d734d7d546f13ca4ab"
             },
             "require": {
                 "doctrine/orm": "^3.3",
@@ -1560,6 +1632,12 @@
                     "@test:backend-adoption",
                     "@test:backend-handoff",
                     "@test:backend-adoption-packet"
+                ],
+                "cs:check": [
+                    "php-cs-fixer fix --dry-run --diff --verbose"
+                ],
+                "cs:fix": [
+                    "php-cs-fixer fix --verbose"
                 ],
                 "phpstan": [
                     "phpstan analyse src tests tools --memory-limit=1G"
@@ -1650,13 +1728,14 @@
                     "@php vendor/bin/gating check --target=."
                 ],
                 "quality": [
+                    "@cs:check",
                     "@phpstan",
                     "@test",
                     "@gate"
                 ]
             },
             "license": [
-                "MIT"
+                "PolyForm-Noncommercial-1.0.0"
             ],
             "authors": [
                 {
@@ -6970,7 +7049,7 @@
             "dist": {
                 "type": "path",
                 "url": "../Tabling",
-                "reference": "0110010c7a5502b3c4736cfb6d7157e7ecb3c9bc"
+                "reference": "e42a781348a0150f25e9775b6faf2a67f80cf69a"
             },
             "require": {
                 "collectioning/collection": "dev-master",
@@ -7030,7 +7109,7 @@
                 ]
             },
             "license": [
-                "proprietary"
+                "PolyForm-Noncommercial-1.0.0"
             ],
             "description": "Symfony backend table-definition primitive for provider-neutral columns, filters, actions and security.",
             "transport-options": {
@@ -7266,10 +7345,14 @@
             "dist": {
                 "type": "path",
                 "url": "../Viewing",
-                "reference": "108a01f71bbc6ac59d07414a681d2a762c97753f"
+                "reference": "3faba854b38eafa31900cd3fa763260207a2d596"
             },
             "require": {
+                "collectioning/collection": "dev-master",
+                "cruding/crud": "dev-master",
+                "easycorp/easyadmin-bundle": "^5.5",
                 "interfacing/interface": "dev-master",
+                "objecting/object": "dev-master",
                 "php": "^8.4",
                 "psr/log": "^3.0",
                 "symfony/config": "^8.1",
@@ -7281,6 +7364,7 @@
                 "symfony/routing": "^8.1",
                 "symfony/twig-bundle": "^8.1",
                 "symfony/yaml": "^8.1",
+                "tabling/table": "dev-master",
                 "twig/twig": "^3.0"
             },
             "require-dev": {
@@ -7289,7 +7373,10 @@
                 "phpstan/phpstan": "^2.1",
                 "phpunit/phpunit": "^12.0",
                 "squizlabs/php_codesniffer": "^3.10",
+                "symfony/browser-kit": "^8.1",
+                "symfony/css-selector": "^8.1",
                 "symfony/framework-bundle": "^8.1",
+                "symfony/panther": "^2.4",
                 "symfony/var-dumper": "^8.1"
             },
             "type": "symfony-bundle",
@@ -7311,7 +7398,18 @@
             },
             "scripts": {
                 "test": [
-                    "phpunit"
+                    "@php -d sys_temp_dir=var vendor/bin/phpunit"
+                ],
+                "test:coverage": [
+                    "@php -d sys_temp_dir=var -d xdebug.mode=coverage vendor/bin/phpunit --path-coverage --coverage-text=coverage.txt"
+                ],
+                "test:behavioral-coverage": [
+                    "php tool/behavioral-coverage.php"
+                ],
+                "diagnose:coverage-paths": [
+                    "@php -d xdebug.mode=coverage bin/cmcp-candidate-paths.php",
+                    "@php -d xdebug.mode=coverage bin/cmcp-classifier-paths.php",
+                    "@php -d xdebug.mode=coverage bin/cmcp-route-paths.php"
                 ],
                 "validate:prod": [
                     "composer validate --strict --no-check-all composer.prod.json"
@@ -7332,9 +7430,9 @@
                 ]
             },
             "license": [
-                "proprietary"
+                "PolyForm-Noncommercial-1.0.0"
             ],
-            "description": "Smart Responsor Viewing/View component: central Symfony view boundary for neutral controller payloads, template fallback, and JSON fallback.",
+            "description": "Viewing/View component: central Symfony view boundary for neutral controller payloads, template fallback, and JSON fallback.",
             "transport-options": {
                 "symlink": true,
                 "relative": true
@@ -7835,7 +7933,7 @@
             "dist": {
                 "type": "path",
                 "url": "../Gating",
-                "reference": "957e9d5ade835d089d11e13560cd1f1d24632ac6"
+                "reference": "54f203f7b2fb85ca213137f9ca4d9ce53617d8da"
             },
             "require": {
                 "php": "^8.4",
@@ -7899,9 +7997,9 @@
                 ]
             },
             "license": [
-                "proprietary"
+                "PolyForm-Noncommercial-1.0.0"
             ],
-            "description": "Smart Responsor Symfony-oriented executable ecosystem gate.",
+            "description": "Symfony-oriented executable gate for the multi-domain SaaS platform ecosystem.",
             "transport-options": {
                 "symlink": true,
                 "relative": true
@@ -11135,6 +11233,7 @@
     "stability-flags": {
         "collectioning/collection": 20,
         "cruding/crud": 20,
+        "failing/failure": 20,
         "gating/gate": 20,
         "interfacing/interface": 20,
         "objecting/object": 20,

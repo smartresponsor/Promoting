@@ -9,6 +9,7 @@
     "php": "^8.4",
     "collectioning/collection": "dev-master",
     "cruding/crud": "dev-master",
+    "failing/failure": "dev-master",
     "easycorp/easyadmin-bundle": "^5.5",
     "interfacing/interface": "dev-master",
     "objecting/object": "dev-master",
@@ -36,6 +37,11 @@
     "gating/gate": "dev-master"
   },
   "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/smartresponsor/failing.git",
+      "no-api": true
+    },
     {
       "type": "vcs",
       "url": "https://github.com/smartresponsor/gating.git",
