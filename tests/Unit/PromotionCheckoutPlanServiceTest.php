@@ -13,6 +13,8 @@ use App\Promoting\Service\PromotionApplicationService;
 use App\Promoting\Service\PromotionBenefitService;
 use App\Promoting\Service\PromotionCampaignSelectionService;
 use App\Promoting\Service\PromotionCampaignService;
+use App\Promoting\Service\PromotionCheckoutBenefitResolutionService;
+use App\Promoting\Service\PromotionCheckoutCandidateService;
 use App\Promoting\Service\PromotionCheckoutPlanService;
 use App\Promoting\Service\PromotionCouponResolutionService;
 use App\Promoting\Service\PromotionCouponService;
@@ -42,11 +44,13 @@ final class PromotionCheckoutPlanServiceTest extends TestCase
         $campaign = new PromotionCampaignService();
 
         return new PromotionCheckoutPlanService(
-            $selection,
-            new PromotionCampaignSelectionService($campaign, $selection),
-            new PromotionCouponResolutionService($coupon, $evaluation),
+            new PromotionCheckoutCandidateService(
+                $selection,
+                new PromotionCampaignSelectionService($campaign, $selection),
+                new PromotionCouponResolutionService($coupon, $evaluation),
+            ),
             new PromotionResolutionService($application),
-            new PromotionBenefitService($evaluation),
+            new PromotionCheckoutBenefitResolutionService(new PromotionBenefitService($evaluation)),
         );
     }
 

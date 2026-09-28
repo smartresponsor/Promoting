@@ -17,6 +17,8 @@ use App\Promoting\Service\PromotionCampaignSelectionService;
 use App\Promoting\Service\PromotionCampaignService;
 use App\Promoting\Service\PromotionCampaignUsageService;
 use App\Promoting\Service\PromotionCheckoutApplicationService;
+use App\Promoting\Service\PromotionCheckoutBenefitResolutionService;
+use App\Promoting\Service\PromotionCheckoutCandidateService;
 use App\Promoting\Service\PromotionCheckoutPlanService;
 use App\Promoting\Service\PromotionCouponResolutionService;
 use App\Promoting\Service\PromotionCouponService;
@@ -51,11 +53,13 @@ final class PromotionCheckoutApplicationServiceTest extends TestCase
         $selection = new PromotionSelectionService($evaluation);
         $campaign = new PromotionCampaignService();
         $plan = new PromotionCheckoutPlanService(
-            $selection,
-            new PromotionCampaignSelectionService($campaign, $selection),
-            new PromotionCouponResolutionService($coupon, $evaluation),
+            new PromotionCheckoutCandidateService(
+                $selection,
+                new PromotionCampaignSelectionService($campaign, $selection),
+                new PromotionCouponResolutionService($coupon, $evaluation),
+            ),
             new PromotionResolutionService($application),
-            new PromotionBenefitService($evaluation),
+            new PromotionCheckoutBenefitResolutionService(new PromotionBenefitService($evaluation)),
         );
 
         return new PromotionCheckoutApplicationService($plan, $coupon, $campaign, new PromotionCampaignUsageService());
@@ -957,11 +961,13 @@ final class PromotionCheckoutApplicationServiceTest extends TestCase
         $selection = new PromotionSelectionService($evaluation);
         $campaign = new PromotionCampaignService();
         $plan = new PromotionCheckoutPlanService(
-            $selection,
-            new PromotionCampaignSelectionService($campaign, $selection),
-            new PromotionCouponResolutionService($planningCouponService, $evaluation),
+            new PromotionCheckoutCandidateService(
+                $selection,
+                new PromotionCampaignSelectionService($campaign, $selection),
+                new PromotionCouponResolutionService($planningCouponService, $evaluation),
+            ),
             new PromotionResolutionService($application),
-            new PromotionBenefitService($evaluation),
+            new PromotionCheckoutBenefitResolutionService(new PromotionBenefitService($evaluation)),
         );
         $failingCouponService = new class implements PromotionCouponServiceInterface {
             public function validate(

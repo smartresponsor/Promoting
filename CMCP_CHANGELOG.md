@@ -223,3 +223,18 @@ Implemented in this pass:
 
 Verification after remediation: PHP syntax lint PASS for all six changed PHP files; `composer validate --strict --check-lock` PASS; PHPUnit 185/185 tests with 552 assertions PASS; PHPStan PASS with zero errors; PHP-CS-Fixer dry-run PASS; Gating PASS with 9 rules, zero failures/warnings/suppressed/skipped; Playwright standalone runtime smoke PASS (1/1); `git diff --check` PASS. Structural self-check shows none of the changed methods at >=60 physical lines or the prior high branch-count envelope. Fresh Inspecting remains unresolved: the long post-mutation invocation exceeded the MCP call window, and a bounded 30-second retry returned `INSPECTING_FAILED` without stdout/stderr. Therefore this remediation is committed as verified code improvement but the Inspecting front is not declared GREEN until a fresh report is obtained for the current repository fingerprint.
 
+## 2026-09-28 Inspecting SRP/cohesion follow-up
+
+Fresh persisted Inspecting report `D--PhpstormProjects-www-Promoting-20260928-125522.json` confirmed that the original eight structural findings were reduced to three medium findings: one large-class finding on `PromotionCheckoutApplicationService` and low-property-cohesion findings on checkout application and plan services. PHPStan inside Inspecting reported zero errors and max cyclomatic complexity dropped from 44 to 14.
+
+Remediation:
+- extracted typed checkout candidate selection into `PromotionCheckoutCandidateService` with `PromotionCheckoutCandidateResultDTO`;
+- extracted benefit resolution into `PromotionCheckoutBenefitResolutionService`;
+- extracted coupon replay/redemption/reversal into `PromotionCheckoutCouponOperationService` and typed planning/effect DTOs;
+- extracted campaign replay/usage/spend accounting into `PromotionCheckoutCampaignOperationService` and typed planning/effect DTOs;
+- extracted campaign-aware plan finalization into `PromotionCheckoutApplicationPlanService` and `PromotionCheckoutApplicationPlanResultDTO`;
+- reduced `PromotionCheckoutPlanService` and `PromotionCheckoutApplicationService` to cohesive orchestration facades while preserving their public interfaces and the existing application-service constructor contract;
+- updated Symfony service wiring and unit fixtures without changing promotion ownership boundaries.
+
+Verification after the follow-up: PHPUnit 185/185 tests with 552 assertions PASS; PHPStan PASS with zero errors; PHP-CS-Fixer PASS; Gating PASS with zero failures/warnings; `git diff --check` PASS. The standalone Inspecting capability is currently failing before persisting a new report, so no new Inspecting GREEN claim is made yet. The code is integrated only after deterministic gates are green; Inspecting will be retried against the committed fingerprint.
+

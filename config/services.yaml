@@ -95,13 +95,21 @@ services:
     App\Promoting\ServiceInterface\PromotionCampaignUsageServiceInterface:
         alias: App\Promoting\Service\PromotionCampaignUsageService
 
-    App\Promoting\Service\PromotionCheckoutPlanService:
+    App\Promoting\Service\PromotionCheckoutCandidateService:
         arguments:
             $selectionService: '@App\Promoting\ServiceInterface\PromotionSelectionServiceInterface'
             $campaignSelectionService: '@App\Promoting\ServiceInterface\PromotionCampaignSelectionServiceInterface'
             $couponResolutionService: '@App\Promoting\ServiceInterface\PromotionCouponResolutionServiceInterface'
-            $resolutionService: '@App\Promoting\ServiceInterface\PromotionResolutionServiceInterface'
+
+    App\Promoting\Service\PromotionCheckoutBenefitResolutionService:
+        arguments:
             $benefitService: '@App\Promoting\ServiceInterface\PromotionBenefitServiceInterface'
+
+    App\Promoting\Service\PromotionCheckoutPlanService:
+        arguments:
+            $candidateService: '@App\Promoting\Service\PromotionCheckoutCandidateService'
+            $resolutionService: '@App\Promoting\ServiceInterface\PromotionResolutionServiceInterface'
+            $benefitResolutionService: '@App\Promoting\Service\PromotionCheckoutBenefitResolutionService'
 
     App\Promoting\ServiceInterface\PromotionCheckoutPlanServiceInterface:
         alias: App\Promoting\Service\PromotionCheckoutPlanService
