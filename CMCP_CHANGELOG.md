@@ -269,5 +269,30 @@ Acceptance outcome:
 - RC validator PASS on all executed checks and reports zero canon issues; its only readiness blocker before integration is the owned journal modification.
 - A fresh Inspecting invocation was attempted but the synchronous Console MCP call exceeded its tool window. No PHP/source scope changed in this remediation, so the supplied current-fingerprint Inspecting evidence remains the applicable code-quality baseline: four medium maintainability observations and no RC-critical finding.
 
+## 2026-09-30 autonomous RC reconciliation
+
+Baseline: `master` at `938fc0c79f8ae3b9500af8455f74dabe29a6cbf2`, synchronized with `origin/master`. The only pre-existing worktree change was deletion of `.gating/README.md`; no unrelated source mutation was present.
+
+Reconnaissance consumed the supplied CanonScanning RED report and current-fingerprint Inspecting report, Promoting README/Composer manifests/profile/journal, and the required Objecting, Cruding, Viewing, Interfacing, Gating, and Canonization contour. Normative Canonization evidence consulted directly includes `Canon052GatingIntegrationRule.md`; the executable mirror is `Gating/src/Rule/Canon/Canon052GatingIntegrationRule.php`.
+
+Target-to-canon mapping remains `promoting/promotion` -> `App\\Promoting\\` -> `Promotion*`. Composer already satisfies Canon052 through `gating/gate: dev-master`, sibling `../Gating` with `symlink: true`, the standard `gate` script, aggregate `quality`, and production package metadata without a local path dependency.
+
+RC-critical workstream: reconcile the current consumer `.gating/` state to the authoritative artifact-only topology and re-run deterministic acceptance gates. Growth remains separate: richer campaign targeting/budget dimensions, fraud/velocity controls, and operator UX are post-RC concerns; the four supplied medium Inspecting long-method observations remain maintainability evidence rather than correctness blockers.
+
+The current physical `.gating/` owner-tree contamination from the RED scan is no longer present. Restored the canonical tracked artifact-boundary README from HEAD content; no business/domain PHP source was changed and no destructive cleanup was performed.
+
+Acceptance gates for this pass: Composer strict/check-lock validation, PHPUnit, PHPStan, PHP-CS-Fixer dry-run, Playwright/behavioral coverage, Gating, and post-change Inspecting applicability review.
+
+Acceptance outcome:
+- `composer validate --strict --check-lock`: PASS.
+- PHPUnit: PASS, 185 tests / 552 assertions.
+- PHPStan: PASS, zero errors.
+- PHP-CS-Fixer dry-run: PASS, zero fixable files.
+- Playwright: PASS, 1/1 standalone runtime smoke.
+- Behavioral/UI evidence generation: PASS.
+- Gating: PASS, 9 rules with zero failures/warnings/skips; current consumer topology no longer reproduces the Canon052 RED condition.
+- Aggregate `quality` launch was capacity-deferred by Console MCP (`ADMIT_LIGHT_ONLY`, engine backlog high); every declared constituent gate required for this no-source-change pass was executed independently and passed.
+- Supplied Inspecting evidence remains applicable to PHP/source scope because this pass changed no PHP/source/runtime behavior; its four medium long-method findings remain non-blocking maintainability observations.
+
 
 
