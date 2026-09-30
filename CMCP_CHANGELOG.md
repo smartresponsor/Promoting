@@ -246,3 +246,28 @@ The remaining acceptance tail is isolated to the standalone Inspecting transport
 
 No repository-local workaround was retained: the generic asynchronous PowerShell runner only allows scripts from `tool/` or `bin/`, and adding an Inspecting orchestration wrapper to Promoting would violate the external verification ownership boundary. The appropriate platform repair is a durable asynchronous Inspecting execution contract (start/status/output or equivalent reuse of the shared async command runner). Until fresh Inspecting evidence is persisted for the current fingerprint, the Inspecting front is not claimed GREEN despite the independently green RC diagnostic.
 
+## 2026-09-29 Canon052 remediation and RC baseline
+
+Reconnaissance consumed the authoritative task specification, current Promoting boundary/runtime manifests, fresh CanonScanning RED report, supplied Inspecting evidence, and the mandatory Objecting/Cruding/Viewing/Interfacing plus Gating/Canonization contour. Normative Canonization material consulted directly includes Canon052GatingIntegrationRule and GUARD_MATRIX; the executable mirror inspected is Gating Canon052GatingIntegrationRule.
+
+Target mapping: `promoting/promotion` -> `App\\Promoting\\` -> `Promotion*`; Promoting remains a Symfony-oriented promotion engine with zero generic CRUD ownership. Development Gating integration is already canonical through `gating/gate: dev-master`, `../Gating` with `symlink: true`, a standard `gate` script, and `@gate` inside aggregate `quality`.
+
+The sole RED canon blocker was consumer `.gating/` contamination: CanonScanning had materialized the Gating owner repository inside Promoting's artifact-only consumer surface. The contaminated tree was preserved non-destructively under ignored `var/gating-owner-tree-quarantine-20260929-2130`; `.gating/README.md` was restored to the canonical artifact-only boundary. No promotion business logic was changed.
+
+RC-critical workstream: restore Canon052 topology, refresh deterministic gates/coverage, then obtain fresh post-mutation Inspecting evidence. Growth workstream remains separate: the supplied four medium long-method observations are maintainability candidates only and do not justify speculative behavior changes without fresh post-remediation evidence.
+
+Gates selected for acceptance: Composer strict/check-lock validation, PHPUnit, fresh branch coverage, PHPStan, PHP-CS-Fixer dry-run, Playwright/behavioral evidence, Gating, Symfony configuration/container checks where available, and fresh Inspecting after repository mutation.
+
+Acceptance outcome:
+- Composer strict/check-lock validation PASS.
+- PHPUnit PASS: 185 tests / 552 assertions.
+- PHPStan PASS: zero errors.
+- PHP-CS-Fixer dry-run PASS: zero fixable files.
+- Playwright PASS: 1/1; behavioral coverage evidence regenerated.
+- Fresh Xdebug branch-coverage run PASS and refreshed `var/coverage/summary.txt`.
+- Promoting Gating profile PASS: 9 rules, zero failures/warnings/skips.
+- RC validator PASS on all executed checks and reports zero canon issues; its only readiness blocker before integration is the owned journal modification.
+- A fresh Inspecting invocation was attempted but the synchronous Console MCP call exceeded its tool window. No PHP/source scope changed in this remediation, so the supplied current-fingerprint Inspecting evidence remains the applicable code-quality baseline: four medium maintainability observations and no RC-critical finding.
+
+
+
